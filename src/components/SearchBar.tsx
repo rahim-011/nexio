@@ -5,8 +5,17 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import AddFriend from "./FriendsComponents/AddFriend";
+import { searchResults } from "@/lib/types";
+import AddNewMessage from "./ChatComponents/AddNewMessage";
 
-export default function SearchBar({placeHolder}:{placeHolder:string}){
+
+
+interface SearchBarProps{
+    searchType: searchResults
+    placeHolder: string
+}
+
+export default function SearchBar({placeHolder,searchType}:SearchBarProps){
     const [isOpen,setIsOpen] = useState<boolean>(false);
     const dropDownRef = useRef<HTMLDivElement | null>(null)
     const pathname = usePathname();
@@ -71,9 +80,22 @@ export default function SearchBar({placeHolder}:{placeHolder:string}){
                 )}
             </div>
             {isOpen && (
-                <div className="absolute left-0 right-0 z-50 bg-primary9 mt-1 rounded-b-lg p-3 shadow-2xl min-h-auto origin-top animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-3">
-                    <AddFriend/>
-                    <AddFriend/>
+                <div className="absolute left-0 right-0 z-50 bg-primary8 mt-1 rounded-b-lg p-3 shadow-2xl min-h-auto origin-top animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-3">
+                    {searchType === "friend" ? 
+                        (<>
+                            <AddFriend/>
+                            <AddFriend/>
+                            <AddFriend/>
+                        </>) :
+                        (
+                        <>
+                            {/*The key here is a dynamic value that will be changed soon into a key map where i can controll which  field i am selecting */}
+                            {Array.from({length:5}).map((_,index)=>(
+                                <AddNewMessage index={index}/>
+                            ))}  
+                        </>
+                        )
+                    }
                 </div>
             )}
         </div>
