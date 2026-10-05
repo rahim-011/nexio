@@ -2,4 +2,4 @@
 
 
 
-export type searchResults = 'chat' | 'friend';
+export type searchResults = 'chat' | 'friend' | 'all';

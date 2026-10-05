@@ -24,7 +24,7 @@ export default function EmptyChat() {
             </button>
             {isOpen && <div>
                 <Overlay closeModel={() =>setIsOpen(false)}/>
-                <NewMessageModel closeModel={()=>setIsOpen(false)}/>
+                <NewMessageModel closeModel={()=>setIsOpen(false)}/>B
             </div>}
         </div>
     );

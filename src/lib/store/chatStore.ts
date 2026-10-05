@@ -1,13 +1,15 @@
 import { create } from "zustand";
 
 interface ChatStoreValues {
-    currentMessageIndex: number;
-    setCurrentMessage: (val: number) => void;
+    currentMessageIndex: number | null;
+    setCurrentMessage: (val: number | null) => void;
+    clearCurrentMessage: () => void,
 }
 
 export const useChatStore = create<ChatStoreValues>((set, get) => ({
-    currentMessageIndex: 0,
+    currentMessageIndex: null,
     setCurrentMessage: (val) => 
         set({ currentMessageIndex: val }),
+    clearCurrentMessage: () => set({currentMessageIndex: null})
     
 }));

@@ -6,9 +6,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ProfileIcon from "./ProfileIcon";
 import { useEffect, useRef, useState } from "react";
+import SearchModel from "./MainSearch";
+import MainSearch from "./MainSearch";
 
 export default function LeftSide(){
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [isModelOpen,setIsModelOpen] = useState<boolean>(false);
     const closeModel = useRef<HTMLDivElement | null>(null);
     const navLinks = [
         {label: 'Search', icon: <Search size={22} className="text-grey3 mb-1"/>, path: '/search'},
@@ -16,13 +19,13 @@ export default function LeftSide(){
         {label: 'Friends', icon: <Users size={22} className="text-grey3 mb-1"/>, path: '/add-friends'},
         {label: 'Requests', icon: <Bell size={22} className="text-grey3 mb-1"/>, path: '/requests'},
         {label: 'Post', icon: <Plus size={22} className="text-grey3 mb-1"/>, path: '/post'}
-    ]
+    ];
 
     const modelLinks = [
         {label: 'Settings', icon: <Settings size={22} className="text-grey3 mb-1"/>, path: '/settings'},
         {label: 'Profile', icon: <User size={22} className="text-grey3 mb-1"/>, path: '/profile'},
         {label: 'Log Out', icon: <Power size={22} className="text-error3 mb-1"/>, path: '/sign-in'},
-    ]
+    ];
 
     const pathname = usePathname();
     const showLeftSide = pathname !== '/';
@@ -37,6 +40,9 @@ export default function LeftSide(){
         return () => document.removeEventListener('mousedown', closeModelHandler);
     }, []);
 
+
+
+    console.log(isModelOpen)
     if (!showLeftSide) return null;
 
     return(
@@ -47,12 +53,20 @@ export default function LeftSide(){
                 </div>
                 <div className="flex flex-col gap-4">   
                     {navLinks.map(link =>{
+                        if (link.label === 'Search') {
+                            return(
+                                <button key={link.label} onClick={() => setIsModelOpen(true)} className="flex items-center gap-3 py-3 px-6 w-full rounded-lg text-[1.2rem] text-grey1 hover:bg-primary6 transition-all text-left hover:cursor-pointer">
+                                    {link.icon} <span className="truncate">{link.label}</span>
+                                </button>
+                            );
+                        }
                         const activeClass = pathname === link.path ?  'bg-primary2 font-semibold' :  'hover:bg-primary6 transition-all';
                         return(
                             <Link key={link.path} href={link.path} className={`flex items-center gap-3 py-3 px-6 w-full rounded-lg text-[1.2rem] text-grey1 ${activeClass}`}>
                                 {link.icon} <span className="truncate">{link.label}</span>
                             </Link>
-                        )})}
+                        );
+                    })}
                 </div>
             </div>
             
@@ -65,7 +79,8 @@ export default function LeftSide(){
                                  <Link key={link.path} href={link.path} className={`${link.path === '/sign-in' ? '!text-error3' : ''} text-grey1 text-[1.2rem] flex items-center gap-3 ${activeClass} py-3 px-6 rounded-lg`}>
                                     {link.icon} <span className="truncate">{link.label}</span>
                                 </Link>
-                            )})}
+                            );
+                        })}
                     </div>
                 )}
                 <div className="flex items-center justify-between py-4 border border-primary5/40 p-3">
@@ -73,6 +88,7 @@ export default function LeftSide(){
                     <Ellipsis size={22} className="text-grey3 cursor-pointer" onClick={() => setIsOpen(prev => !prev)} />
                 </div>
             </div>
+            {isModelOpen && <MainSearch closeModel={() =>setIsModelOpen(false)}/>}
         </aside>
     );
 }
