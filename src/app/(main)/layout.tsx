@@ -27,7 +27,7 @@ export default function MainLayout({
             <LeftSide />
             <div className="flex-1 ml-[25%] flex flex-col min-w-0 bg-primary7">
                 <NavBar />
-                <main className="p-6  min-h-screen ">
+                <main className="min-h-screen ">
                     {children}
                 </main>
             </div>

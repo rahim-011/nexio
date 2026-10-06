@@ -22,7 +22,7 @@ export default function LeftSide(){
     ];
 
     const modelLinks = [
-        {label: 'Settings', icon: <Settings size={22} className="text-grey3 mb-1"/>, path: '/settings'},
+        {label: 'Settings', icon: <Settings size={22} className="text-grey3 mb-1"/>, path: '/settings/edit-profile'},
         {label: 'Profile', icon: <User size={22} className="text-grey3 mb-1"/>, path: '/profile'},
         {label: 'Log Out', icon: <Power size={22} className="text-error3 mb-1"/>, path: '/sign-in'},
     ];
