@@ -8,10 +8,13 @@ import ProfileIcon from "./ProfileIcon";
 import { useEffect, useRef, useState } from "react";
 import SearchModel from "./MainSearch";
 import MainSearch from "./MainSearch";
+import PostModel from "./PostModel";
+import Overlay from "./Overlay";
 
 export default function LeftSide(){
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [isModelOpen,setIsModelOpen] = useState<boolean>(false);
+    const [isPostOpen,setIsPostOpen] = useState<boolean>(false);
     const closeModel = useRef<HTMLDivElement | null>(null);
     const navLinks = [
         {label: 'Search', icon: <Search size={22} className="text-grey3 mb-1"/>, path: '/search'},
@@ -59,6 +62,14 @@ export default function LeftSide(){
                                     {link.icon} <span className="truncate">{link.label}</span>
                                 </button>
                             );
+                        }else {
+                            if (link.label === 'Post'){
+                                return(
+                                    <button key={link.label} onClick={() => setIsPostOpen(true)} className="flex items-center gap-3 py-3 px-6 w-full rounded-lg text-[1.2rem] text-grey1 hover:bg-primary6 transition-all text-left hover:cursor-pointer">
+                                        {link.icon} <span className="truncate">{link.label}</span>
+                                    </button>
+                                )
+                            }
                         }
                         const activeClass = pathname === link.path ?  'bg-primary2 font-semibold' :  'hover:bg-primary6 transition-all';
                         return(
@@ -76,7 +87,7 @@ export default function LeftSide(){
                         {modelLinks.map(link =>{
                             const activeClass = pathname === link.path ? 'bg-primary2 font-semibold' : 'hover:bg-primary6 transition-all';
                             return(
-                                 <Link key={link.path} href={link.path} className={`${link.path === '/sign-in' ? '!text-error3' : ''} text-grey1 text-[1.2rem] flex items-center gap-3 ${activeClass} py-3 px-6 rounded-lg`}>
+                                 <Link onClick={()=>setIsOpen(false)} key={link.path} href={link.path} className={`${link.path === '/sign-in' ? '!text-error3' : ''} text-grey1 text-[1.2rem] flex items-center gap-3 ${activeClass} py-3 px-6 rounded-lg`}>
                                     {link.icon} <span className="truncate">{link.label}</span>
                                 </Link>
                             );
@@ -89,6 +100,12 @@ export default function LeftSide(){
                 </div>
             </div>
             {isModelOpen && <MainSearch closeModel={() =>setIsModelOpen(false)}/>}
+            {isPostOpen && 
+                <>
+                    <PostModel closeModel={()=>setIsPostOpen(false)}/>
+                    <Overlay closeModel={()=>setIsPostOpen(false)}/>
+                </>
+            }
         </aside>
     );
 }
