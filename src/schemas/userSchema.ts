@@ -9,7 +9,11 @@ export const pfpSchema = z.object({
 
 
 export const postSchema = z.object({
-    postPicture: z.url({message:'Please provide a valid image URL'}),
+    media: z.object({
+        publicId: z.string().min(1,{message:'Public id is required!'}),
+        resourceType: z.enum(['image','video']),
+        url: z.url().startsWith(`https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`),
+    }),
     postCaption: z.string().min(10,{message:'Caption must be less than 200 characters'})
 })
 

@@ -6,10 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ProfileIcon from "./ProfileIcon";
 import { useEffect, useRef, useState } from "react";
-import SearchModel from "./MainSearch";
 import MainSearch from "./MainSearch";
 import PostModel from "./PostModel";
-import Overlay from "./Overlay";
 
 export default function LeftSide(){
     const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -100,12 +98,9 @@ export default function LeftSide(){
                 </div>
             </div>
             {isModelOpen && <MainSearch closeModel={() =>setIsModelOpen(false)}/>}
-            {isPostOpen && 
-                <>
-                    <PostModel closeModel={()=>setIsPostOpen(false)}/>
-                    <Overlay closeModel={()=>setIsPostOpen(false)}/>
-                </>
-            }
+            {isPostOpen && (
+                <PostModel closeModel={() => setIsPostOpen(false)} />
+            )}
         </aside>
     );
 }

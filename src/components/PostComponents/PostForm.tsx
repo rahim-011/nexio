@@ -1,28 +1,40 @@
 import { FormProvider, useForm } from "react-hook-form";
-import PictureForm from "./PictureForm";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { postSchema } from "@/schemas/userSchema";
+import MediaForm from "./MediaForm";
+import z from "zod";
 
+
+export type PostFormValues = z.infer<typeof postSchema>;
 
 export default function PostForm(){
 
 
-    const form = useForm({
+    const form = useForm<PostFormValues>({
         resolver: zodResolver(postSchema),
         defaultValues:{
             postCaption: '',
-            postPicture: '',
+            media: {}
         }
     })
-    
 
+
+
+    const onSubmit = async(values:PostFormValues) =>{
+        try{
+
+        }
+        catch(error){
+            console.log(error)
+        }
+    }
     return(
-        <div className="flex flex-col">
+
             <FormProvider {...form}>
                 <form className="">
-                    <PictureForm/>
+                    <MediaForm/>
                 </form>
             </FormProvider>
-        </div>
+
     )
 }
