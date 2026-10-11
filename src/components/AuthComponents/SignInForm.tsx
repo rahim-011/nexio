@@ -80,7 +80,7 @@ export default function SignInForm(){
 
                                 {!showPass? (
                                     <EyeOff
-                                        className="absolute text-grey6 top-1/2 -translate-y-1/2 right-3 cursor-pointer"
+                                        className="absolute text-grey6 top-1/3 -translate-y-1/2 right-3 cursor-pointer"
                                         size={22}
                                         onClick={() => setShowPass(prev => !prev)}
                                     />
@@ -88,10 +88,10 @@ export default function SignInForm(){
                                     <Eye
                                         size={22}
                                         onClick={() => setShowPass(prev => !prev)}
-                                        className="absolute text-grey6 top-1/2 -translate-y-1/2 right-3 cursor-pointer"
+                                        className="absolute text-grey6 top-1/3 -translate-y-1/2 right-3 cursor-pointer"
                                     />
                                 )}
-                                {!errors.password && <Link href="/reset-password" className="text-error3 hover:brightness-110 underline cursor-pointer self-end">Forget password?</Link>}
+                                {!errors.password && <Link href="/forget-password" className="text-error3 hover:brightness-110 underline cursor-pointer self-end">Forget password?</Link>}
                             </div>
                             {errors.password && <div className="flex items-center justify-between">
                                 {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-red-500 text-[1.1rem]"/>}

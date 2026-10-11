@@ -50,3 +50,13 @@ export const editPasswordSchema = z.object({
     path:['confirmNewPassword'],
     message:'Passwords do not match'
 })
+
+
+
+
+export const otpCodeSchema = z.object({
+    otpCode: z
+        .string()
+        .length(6, { message: 'OTP Code must be exactly 6 digits' })
+        .regex(/^\d+$/, { message: 'OTP Code must contain numbers only' }),
+});
