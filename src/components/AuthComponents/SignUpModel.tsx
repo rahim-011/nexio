@@ -44,7 +44,7 @@ export default function SignUpModel() {
                     <span className="h-px flex-1 bg-white/15"></span>
                 </div>
 
-                <SocialProviders />
+                <SocialProviders type="sign-up"/>
 
                 <div className="flex flex-wrap items-center justify-center gap-x-2 text-center text-sm sm:text-base">
                     <span className="text-grey4">Already have an account?</span>

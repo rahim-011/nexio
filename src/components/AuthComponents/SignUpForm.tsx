@@ -9,13 +9,19 @@ import { Input } from "@base-ui/react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { Eye,EyeOff } from "lucide-react";
 import z from "zod";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import LoadingSpinner from "../LoadingSpinner";
 
 
 
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export default function SignUpForm(){
+    const [errMsg,setErrMsg] = useState<string | null>(null)
     const [showPass,setShowPass] = useState<boolean>(false);
+    const router = useRouter();
     const form = useForm({
         resolver: zodResolver(signUpSchema),
         defaultValues:{
@@ -26,12 +32,29 @@ export default function SignUpForm(){
     })
     const {formState: {isDirty,isSubmitting}} = form;
 
-    const onSubmit = (values: SignUpFormValues) =>{
+    const onSubmit = async(values: SignUpFormValues) =>{
         try{
-
+            setErrMsg(null);
+            const {username,email,password} = values;
+            const {error} = await authClient.signUp.email({
+                email: email,
+                password: password,
+                username: username,
+                name: ''
+            } as any)
+            console.log(error)
+            if (error && error.message){
+                setErrMsg(error.message);
+                return;
+            }
+            
+            toast.success("Account created successfully!", {
+                description: "Welcome to Nexio! You're all set.",
+            });
+            router.push('/messages',{scroll:false})
         }
         catch(error){
-
+            toast.error('Something went wrong, Please try again');
         }
     }
     
@@ -122,7 +145,8 @@ export default function SignUpForm(){
                             {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-red-500 text-[1.1rem]"/>}
                         </Field>
                     )}/>
-                <button className="text-grey1 text-center bg-primary5 hover:brightness-115 cursor-pointer px-6 py-3 rounded-lg text-[1.1rem] mt-3 transition-all">Sign Up</button>
+                <button disabled={!isDirty || isSubmitting} className={`flex items-center justify-center text-grey1 text-center bg-primary5 hover:brightness-115 cursor-pointer px-6 py-3 rounded-lg text-[1.1rem] mt-3 transition-all ${!isDirty ? 'opacity-70' : ''}`}>{isSubmitting ? <LoadingSpinner/> : 'Sign Up'}</button>
+                {errMsg && <p className="text-red-500 text-[1rem]"></p>}
             </form>
         </FormProvider>
         

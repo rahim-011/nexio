@@ -31,10 +31,6 @@ export default function SearchBar({placeHolder,searchType}:SearchBarProps){
         const query = searchParams.get('q') || '';
         setCurrentSearch(query);
     }, [searchParams]); 
-    useEffect(() => {
-        const query = searchParams.get('q') || '';
-        setCurrentSearch(query);
-    }, [searchParams]);
     const handleSearch = useDebouncedCallback((value:string) =>{
         const params = new URLSearchParams(searchParams);
         if (value.trim()){

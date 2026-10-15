@@ -8,9 +8,12 @@ import ProfileIcon from "./ProfileIcon";
 import { useEffect, useRef, useState } from "react";
 import MainSearch from "./MainSearch";
 import PostModel from "./PostModel";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 export default function LeftSide(){
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const {data:session} = authClient.useSession();
     const [isModelOpen,setIsModelOpen] = useState<boolean>(false);
     const [isPostOpen,setIsPostOpen] = useState<boolean>(false);
     const closeModel = useRef<HTMLDivElement | null>(null);
@@ -41,7 +44,14 @@ export default function LeftSide(){
         return () => document.removeEventListener('mousedown', closeModelHandler);
     }, []);
 
-
+    const handleLogout = async() =>{
+        try{
+            await authClient.signOut()
+        }
+        catch(error){
+            toast.error('Something went wrong')
+        }
+    }
 
     console.log(isModelOpen)
     if (!showLeftSide) return null;
@@ -85,7 +95,7 @@ export default function LeftSide(){
                         {modelLinks.map(link =>{
                             const activeClass = pathname === link.path ? 'bg-primary2 font-semibold' : 'hover:bg-primary6 transition-all';
                             return(
-                                 <Link onClick={()=>setIsOpen(false)} key={link.path} href={link.path} className={`${link.path === '/sign-in' ? '!text-error3' : ''} text-grey1 text-[1.2rem] flex items-center gap-3 ${activeClass} py-3 px-6 rounded-lg`}>
+                                 <Link onClick={()=>{setIsOpen(false);link.path === '/sign-in' ?handleLogout() : ''}} key={link.path} href={link.path} className={`${link.path === '/sign-in' ? '!text-error3' : ''} text-grey1 text-[1.2rem] flex items-center gap-3 ${activeClass} py-3 px-6 rounded-lg`}>
                                     {link.icon} <span className="truncate">{link.label}</span>
                                 </Link>
                             );

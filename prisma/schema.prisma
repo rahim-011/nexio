@@ -1,13 +1,143 @@
 datasource db {
   provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
+
+
+//Enums
+
+enum ResourceTypes {
+  video
+  image
+}
+
+
+
+
+//Models
+
 model User {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  email String @unique
-  name  String?
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String    @unique
+  username      String
+  emailVerified Boolean
+  image         String?
+
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+  post          Post[]
+  messages      Message[]
+  otpCodes      OtpCodes[]
+  @@map("user")
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  expiresAt    DateTime
+  token        String   @unique
+  createdAt    DateTime
+  updatedAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  accountId             String
+  providerId            String
+  userId                String    @db.ObjectId
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+
+
+
+
+type Media{
+  publicId String
+  resourceType ResourceTypes
+  url   String
+}
+model Post{
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  caption    String?
+  media      Media
+  userId     String     @db.ObjectId
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  user       User       @relation(fields: [userId],references: [id],onDelete:Cascade)
+}
+
+model Chat{
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  participants String[]  @db.ObjectId
+  messages    String[]  @db.ObjectId
+
+  createdAt    DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  message    Message[]
+}
+
+
+model Message{
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  chatId  String   @db.ObjectId
+  senderId  String @db.ObjectId
+  content   String
+  receivedAt  DateTime?
+  hasReceived Boolean   @default(false) 
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sender     User   @relation(fields: [senderId], references: [id])
+  chat       Chat   @relation(fields: [chatId],references: [id])
+}
+
+
+
+model OtpCodes{
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  otpCode     String
+  userId      String    @db.ObjectId
+  expiredAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id],onDelete:Cascade)
 }
