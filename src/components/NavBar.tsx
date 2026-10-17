@@ -12,7 +12,6 @@ export default function NavBar(){
     const showNavBar = pathname === '/';
     const { data: session,isPending } = authClient.useSession();
     if (!showNavBar) return null;
-    if (isPending) return null;
     return(
         <nav className="w-full flex justify-between items-center lg:p-7 md:p-5 p-3 shadow-[0_4px_20px_2px_rgba(0,0,0,0.15)] h-35">
             <Logo/>

@@ -7,6 +7,7 @@ import { usePostStore } from "@/lib/store/postStore";
 import { PostFormValues } from "./PostForm";
 import { Input } from "@base-ui/react";
 import Image from "next/image";
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary";
 
 export default function MediaForm() {
     const [localPreview, setLocalPreview] = useState({ url: "", type: "" });
@@ -19,57 +20,7 @@ export default function MediaForm() {
     const { control, watch } = useFormContext<PostFormValues>();
     const media = watch("media");
 
-    const getSignature = async () => {
-        const response = await fetch("/api/upload-signature", {
-            method: "GET",
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to get the signature");
-        }
-
-        return response.json();
-    };
-
-    const uploadToCloudinary = async (file: File) => {
-        const {
-            signature,
-            preset,
-            apiKey,
-            cloudName,
-            folder,
-            timeStamp,
-        } = await getSignature();
-
-        const formData = new FormData();
-
-        formData.append("file", file);
-        formData.append("upload_preset", preset);
-        formData.append("folder", folder);
-        formData.append("timestamp", timeStamp);
-        formData.append("signature", signature);
-        formData.append("api_key", apiKey);
-
-        const uploaded = await fetch(
-            `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-            {
-                method: "POST",
-                body: formData,
-            }
-        );
-
-        if (!uploaded.ok) {
-            throw new Error("Upload has failed");
-        }
-
-        const data = await uploaded.json();
-
-        return {
-            url: data.secure_url as string,
-            publicId: data.public_id as string,
-            resourceType: data.resource_type as "image" | "video",
-        };
-    };
+    
 
     const processFile = async (
         file: File | undefined,
@@ -96,8 +47,7 @@ export default function MediaForm() {
 
         setIsUploading(true);
         try {
-            const uploaded = await uploadToCloudinary(file);
-
+            const uploaded = await uploadToCloudinary(file,'posts');
             field.onChange(uploaded);
             updateCurrentStep("forward");
         } catch (error) {

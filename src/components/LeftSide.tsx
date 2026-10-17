@@ -10,10 +10,24 @@ import MainSearch from "./MainSearch";
 import PostModel from "./PostModel";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { userInfos } from "@/lib/types";
+import { useUserStore } from "@/lib/store/userStore";
 
-export default function LeftSide(){
+
+interface LeftSideProps{
+    userInfos:userInfos | null
+}
+
+
+export default function LeftSide({userInfos}:LeftSideProps){
+    const {setUserInfos} = useUserStore();
+    useEffect(()=>{
+        if (userInfos){
+            setUserInfos(userInfos)
+        }
+    },[userInfos,setUserInfos]);
+
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    const {data:session} = authClient.useSession();
     const [isModelOpen,setIsModelOpen] = useState<boolean>(false);
     const [isPostOpen,setIsPostOpen] = useState<boolean>(false);
     const closeModel = useRef<HTMLDivElement | null>(null);
@@ -52,8 +66,6 @@ export default function LeftSide(){
             toast.error('Something went wrong')
         }
     }
-
-    console.log(isModelOpen)
     if (!showLeftSide) return null;
 
     return(
@@ -103,7 +115,7 @@ export default function LeftSide(){
                     </div>
                 )}
                 <div className="flex items-center justify-between py-4 border border-primary5/40 p-3">
-                    <ProfileIcon />
+                    <ProfileIcon/>
                     <Ellipsis size={22} className="text-grey3 cursor-pointer" onClick={() => setIsOpen(prev => !prev)} />
                 </div>
             </div>

@@ -16,9 +16,9 @@ export default function EditProfileModel({onClose}:{onClose:()=>void}){
 
                 <div className="flex flex-col gap-6">
                     <div className="self-center">
-                        <ChangePfp/>
+                        <ChangePfp onClose={()=>onClose()}/>
                     </div>
-                    <EditProfileForm/>
+                    <EditProfileForm onClose={()=>onClose()}/>
                 </div>
             </div>
         </div>

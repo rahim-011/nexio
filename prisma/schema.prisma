@@ -16,6 +16,12 @@ enum ResourceTypes {
   image
 }
 
+enum RequestStatuses {
+  pending
+  rejected
+  accepted
+}
+
 
 
 
@@ -25,17 +31,20 @@ model User {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
   email         String    @unique
-  username      String
+  username      String    @unique
   emailVerified Boolean
   image         String?
-
+  bio           String?
+  friendsIds    String[]    @db.ObjectId
   createdAt     DateTime
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
-  post          Post[]
+  posts          Post[]
   messages      Message[]
   otpCodes      OtpCodes[]
+  sentRequests  Requests[]      @relation("SentRequests")
+  receivedRequests  Requests[]  @relation("ReceivedRequests")
   @@map("user")
 }
 
@@ -106,12 +115,10 @@ model Post{
 model Chat{
   id         String @id @default(auto()) @map("_id") @db.ObjectId
   participants String[]  @db.ObjectId
-  messages    String[]  @db.ObjectId
-
   createdAt    DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  message    Message[]
+  messages    Message[]
 }
 
 
@@ -125,19 +132,36 @@ model Message{
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  sender     User   @relation(fields: [senderId], references: [id])
-  chat       Chat   @relation(fields: [chatId],references: [id])
+  sender     User   @relation(fields: [senderId], references: [id],onDelete:Cascade)
+  chat       Chat   @relation(fields: [chatId],references: [id],onDelete:Cascade)
+  @@index([chatId,createdAt]) // index for inhancing the query of getting the messages
 }
 
 
 
 model OtpCodes{
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  otpCode     String
+  hashedOtpCode     String
   userId      String    @db.ObjectId
   expiredAt   DateTime
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   user        User      @relation(fields: [userId], references: [id],onDelete:Cascade)
+}
+
+
+model Requests{
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  senderId    String    @db.ObjectId
+  receiverId  String    @db.ObjectId
+  status      RequestStatuses   @default(pending)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sender      User      @relation("SentRequests",fields: [senderId],references: [id],onDelete:Cascade)
+  receiver      User      @relation("ReceivedRequests",fields: [receiverId],references: [id],onDelete:Cascade)
+
+  @@index([receiverId,status]) //Here to inhance the search of that speceific receiver of this request
+  @@unique([senderId,receiverId]) //receiver cant send back a request to the sender
 }

@@ -9,15 +9,18 @@ import { Input } from "@base-ui/react";
 import { useState } from "react";
 import VerifyEmailModel from "./VerifyEmailModel";
 import Overlay from "../Overlay";
+import { useUserStore } from "@/lib/store/userStore";
 
 export type EditEmailValue = z.infer<typeof editEmailSchema>;
 
 export default function EditEmailForm() {
+    const {cachedUserInfos} = useUserStore();
+    const {email}  = cachedUserInfos;
     const [isOpen,setIsOpen] = useState<boolean>(false);
-    const form = useForm({
+    const form = useForm<EditEmailValue>({
         resolver: zodResolver(editEmailSchema),
         defaultValues: {
-            email: ''
+            email: email || ''
         }
     });
 
@@ -78,7 +81,7 @@ export default function EditEmailForm() {
                 <>
                     <Overlay closeModel={()=>setIsOpen(false)}/>
                         <div className="fixed inset-0 max-w-3xl top-1/2 z-[52]">
-                            <VerifyEmailModel/>
+                            <VerifyEmailModel email={email}/>
                         </div>
 
                 </>

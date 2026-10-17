@@ -3,6 +3,7 @@ import GradientWaves from "@/components/homeComponents/GradientWaves";
 import Footer from "@/components/Footer";
 
 export default function Home() {
+  
   return (
     <main className="relative flex flex-col items-center min-h-screen overflow-hidden">
       <div className="absolute inset-0 -z-10 w-full h-full">

@@ -7,21 +7,27 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req:NextRequest,res:NextResponse) {
     try{
-        const timeStamp = Math.round((new Date()).getTime() / 1000);
-        const preset = "signed_posts_preset";
-        const folder = "posts";
+        const {searchParams} = new URL(req.url);
+        const allowedFolders = ['posts','avatars'];
+        const requestedFolder = searchParams.get('folder');
+        if (!requestedFolder || !allowedFolders.includes(requestedFolder)){
+            return NextResponse.json({error:'Invalid folder'},{status:400})
+        }
+        const timestamp = Math.round((new Date()).getTime() / 1000);
+        const preset = "signed_preset";
         const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
         const apiKey = process.env.CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET as string;
 
 
         const signature = cloudinary.utils.api_sign_request({
-            folder,timeStamp,preset
-        },process.env.CLOUDINARY_KEY_SECRET as string)
+            folder: requestedFolder,timestamp,upload_preset:preset
+        },apiSecret)
 
         return NextResponse.json({
             signature,
-            folder,
-            timeStamp,
+            requestedFolder,
+            timestamp,
             preset,
             cloudName,
             apiKey

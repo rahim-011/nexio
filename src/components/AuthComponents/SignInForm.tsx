@@ -44,8 +44,8 @@ export default function SignInForm(){
                 setErrMsg(error.message);
                 return;
             }
-            router.push('/messages',{scroll:false})
-            toast.success('Welcome back!')
+            toast.success('Welcome back!');
+            router.push('/messages',{scroll:false});
         }
         catch(error){
             toast.error('Somthing went wrong, please try again.')
