@@ -9,6 +9,9 @@ import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "@base-ui/react";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import LoadingSpinner from "../LoadingSpinner";
 
 
 
@@ -16,6 +19,7 @@ export type EditPasswordFormValues = z.infer<typeof editPasswordSchema>;
 
 
 export default function EditPasswordForm(){
+    const [errMsg,setErrMsg] = useState<string | null>(null);
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);    
@@ -34,14 +38,24 @@ export default function EditPasswordForm(){
 
     const handleEditPassword = async(values:EditPasswordFormValues) =>{
         try{
-
+            setErrMsg('');
+            const {currentPassword,newPassword,confirmNewPassword} = values;
+            const {error} = await authClient.changePassword({
+                currentPassword: currentPassword,
+                newPassword:newPassword,
+                revokeOtherSessions:true
+            })
+            if (error && error.message){
+                setErrMsg(error.message);
+                return;
+            }
+            form.reset();
+            toast.success('Password has changed successfully!');
         }
         catch(error){
-
+            toast.error('Something went wrong, please try again');
         }
     }
-
-    {/*Complete the controller and get the styling of them from the other forms */}
     return(
             <FormProvider {...form}>
                 <form onSubmit={form.handleSubmit(handleEditPassword)} className="flex flex-col gap-3">
@@ -135,7 +149,7 @@ export default function EditPasswordForm(){
                             {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-[1.1rem] text-red-500"/>}
                         </Field>
                     )}/>
-                    <button className="text-grey1 text-center px-6 py-3 rounded-lg bg-primary5 hover:brightness-115 transition-all cursor-pointer mt-3 lg:max-w-[40%] text-[1.1rem] font-semibold">Save</button>
+                    <button type="submit" disabled={!isDirty || isSubmitting} className={`flex items-center justify-center text-grey1 text-center px-6 py-3 rounded-lg bg-primary5 hover:brightness-115 transition-all cursor-pointer mt-3 lg:max-w-[40%] text-[1.1rem] font-semibold ${!isDirty ? 'opacity-80' : ''}`}>{isSubmitting ? <LoadingSpinner/> : 'Save'}</button>
                 </form>
             </FormProvider>
     )

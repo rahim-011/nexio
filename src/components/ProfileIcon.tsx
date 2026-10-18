@@ -6,12 +6,19 @@ import Image from "next/image";
 
 
 
+interface ProfileIconProps{
+    avatar?: string | null
+    username?: string
+}
 
-export default function ProfileIcon(){
+
+export default function ProfileIcon({username,avatar}:ProfileIconProps){
     const {cachedUserInfos} = useUserStore();
-    const avatar = cachedUserInfos.avatar || '/callbackAvatar.webp';
-    const username = cachedUserInfos.username;
-  
+    const mainUserAvatar = cachedUserInfos.avatar || '/callbackAvatar.webp';
+    const mainUserUsername = cachedUserInfos.username;
+    
+    const finalAvatar = avatar ?? mainUserAvatar;
+    const finalUsername = username ?? mainUserUsername;
     return(
         <div className="flex items-center gap-2">
             <div className="relative rounded-full">
@@ -22,9 +29,9 @@ export default function ProfileIcon(){
                 className="object-cover rounded-full"
                 unoptimized
                 loading="eager"
-                src={avatar}/>
+                src={finalAvatar || '/callbackAvatar.webp'}/>
             </div>
-            <span className="text-[0.9rem] text-grey1">{username}</span>
+            <span className="text-[0.9rem] text-grey1">{finalUsername}</span>
         </div>
     )
 }

@@ -4,12 +4,13 @@ import { cache } from "react";
 import { redis } from "../redis";
 import { userInfos } from "../types";
 import { BioValue } from "@/components/SettingsComponents/EditBio";
-import { bioSchema, editProfileSchema, pfpSchema } from "@/schemas/userSchema";
+import { bioSchema, editEmailSchema, editProfileSchema, pfpSchema } from "@/schemas/userSchema";
 import { prisma } from "../prisma";
 import { verifyUserSession } from "../services/verifications";
 import { revalidatePath } from "next/cache";
 import { EditProfileFormValues } from "@/components/SettingsComponents/EditProfileForm";
 import { PfpValue } from "@/components/ProfileComponents/ChangePfp";
+import { EditEmailValue } from "@/components/SettingsComponents/EditEmailForm";
 
 
 
@@ -273,6 +274,60 @@ export const changeAvatar = async (value:PfpValue)=>{
         return{
             success:false,
             error:'Something went wrong, please try again'
+        }
+    }
+}
+
+
+
+
+
+export const changeUserEmail = async (value:EditEmailValue) =>{
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const validation = editEmailSchema.safeParse(value);
+        if (!validation.success){
+            return {
+                success:false,
+                error:'Invalid form data'
+            }
+        }
+        const newEmail = validation.data.email;
+        const currentUser = await getCurrentUser(userId);
+
+        if (newEmail === currentUser?.email){
+            return{
+                success:false,
+                error:'No changes were made.'
+            }
+        }
+        await prisma.user.update({
+            where:{
+                id:userId
+            },
+            data:{
+                email: newEmail
+            }
+        })
+        try {
+            const result = await clearUserCachedInfos(userId, '/settings/account-settings');
+
+            if (!result.success) {
+                console.error('Failed to clear user cache:', result.error);
+            }
+        } catch (error) {
+            console.error('Failed to clear user cache:', error);
+        }
+        return{
+            success:true,
+            message:'Email has been changed successfully'
+        }
+    }
+    catch(error){
+        return{
+            success:false,
+            error:'Something went wrong, please try again.'
         }
     }
 }

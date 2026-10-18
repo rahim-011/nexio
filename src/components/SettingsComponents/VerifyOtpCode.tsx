@@ -1,17 +1,29 @@
 import { otpCodeSchema } from "@/schemas/userSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import z from "zod";
+import z, { set } from "zod";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "@base-ui/react";
+import LoadingSpinner from "../LoadingSpinner";
+import { toast } from "sonner";
+import { useState } from "react";
+import { authClient } from "@/lib/auth-client";
+import { changeUserEmail } from "@/lib/services/user";
+import { EditEmailValue } from "./EditEmailForm";
 
 
 
 
 export type OtpCodeValue = z.infer<typeof otpCodeSchema>;
+interface VerifyOtpCodeProps{
+    newEmail:  EditEmailValue['email']
+    onClose: () => void,
+}
 
-export default function VerifyOtpCode(){
 
+
+export default function VerifyOtpCode({newEmail,onClose}:VerifyOtpCodeProps){
+    const [errMsg,setErrMsg] = useState<string | null>(null);
     const form  = useForm({
         resolver: zodResolver(otpCodeSchema),
         defaultValues:{
@@ -22,12 +34,33 @@ export default function VerifyOtpCode(){
     const {formState:{isDirty,isSubmitting}} = form;
     
 
-    const onSubmit = () => {
+    const onSubmit = async(value:OtpCodeValue) => {
         try{
-            
+            setErrMsg('');
+            const {error} = await authClient.emailOtp.verifyEmail({
+                email:newEmail,
+                otp:value.otpCode
+            })
+            if (error && error.message){
+                setErrMsg(error.message);
+                return;
+            }
+            try{
+                const result = await changeUserEmail({email:newEmail});
+                if (!result.success && result.error){
+                    setErrMsg(result.error);
+                    return;
+                }
+                toast.success('Email has been changed successfully.');
+                form.reset();
+            }
+            catch(error){
+                toast.error('Something went wrong, please try again.');
+            }
+            onClose();
         }
         catch(error){
-
+            toast.error('Something went wrong, please try again.')
         }
     }
     return(
@@ -47,7 +80,8 @@ export default function VerifyOtpCode(){
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-red-500 text-[1.1rem]"/>}
                     </Field>
                 )}/>
-                <button className="rounded-lg text-grey1 text-center px-6 py-3 bg-primary5 hover:brightness-110 transition-all cursor-pointer">Verify</button>
+                <button className={`flex items-center justify-center ${!isDirty ?  'opacity-80' : ''} rounded-lg text-grey1 text-center px-6 py-3 bg-primary5 hover:brightness-110 transition-all cursor-pointer`}>{isSubmitting ? <LoadingSpinner/> : 'Verify'}</button>
+                {errMsg && <p className="text-red-500 text-[1rem]">{errMsg}</p>}
             </form>
         </FormProvider>
     )

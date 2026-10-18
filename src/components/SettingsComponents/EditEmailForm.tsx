@@ -10,10 +10,14 @@ import { useState } from "react";
 import VerifyEmailModel from "./VerifyEmailModel";
 import Overlay from "../Overlay";
 import { useUserStore } from "@/lib/store/userStore";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
+import LoadingSpinner from "../LoadingSpinner";
 
 export type EditEmailValue = z.infer<typeof editEmailSchema>;
 
 export default function EditEmailForm() {
+    const [errMsg,setErrMsg] = useState<string | null>(null);
     const {cachedUserInfos} = useUserStore();
     const {email}  = cachedUserInfos;
     const [isOpen,setIsOpen] = useState<boolean>(false);
@@ -24,11 +28,19 @@ export default function EditEmailForm() {
         }
     });
 
-    const { formState: { isDirty, isSubmitting } } = form;
+    const { formState: { isDirty,isSubmitting } } = form;
 
     const handleEditEmail = async (value: EditEmailValue) => {
-        try {
-        } catch (error) {
+        try{
+            const {error} = await authClient.emailOtp.sendVerificationOtp({email:value.email,type:'email-verification'});
+            if (error && error.message){
+                setErrMsg(error.message);
+                return;
+            }
+            setIsOpen(true);
+        }
+        catch(error){
+            toast.error('Something went wrong, please try again.')
         }
     };
 
@@ -71,17 +83,18 @@ export default function EditEmailForm() {
                         onClick={()=>setIsOpen(true)}
                         type="submit"
                         disabled={!isDirty || isSubmitting}
-                        className="text-grey1 text-center px-6 py-3 rounded-lg bg-primary5 hover:brightness-115 transition-all cursor-pointer mt-3 lg:max-w-[40%] text-[1.1rem] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`${!isDirty ? 'opacity-80' : ''} text-grey1 text-center px-6 py-3 rounded-lg bg-primary5 hover:brightness-115 transition-all cursor-pointer mt-3 lg:max-w-[40%] text-[1.1rem] font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center`}
                     >
-                        Submit
+                        {isSubmitting ? <LoadingSpinner/> : 'Submit'}
                     </button>
+                    {errMsg && <p className="text-red-500 text-[1rem]">{errMsg}</p>}
                 </form>
             </FormProvider>
             {isOpen && 
                 <>
                     <Overlay closeModel={()=>setIsOpen(false)}/>
                         <div className="fixed inset-0 max-w-3xl top-1/2 z-[52]">
-                            <VerifyEmailModel email={email}/>
+                            <VerifyEmailModel newEmail={form.getValues('email')} onClose={()=>setIsOpen(false)}/>
                         </div>
 
                 </>
