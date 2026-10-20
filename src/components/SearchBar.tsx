@@ -10,15 +10,21 @@ import { searchResults } from "@/lib/types";
 import AddNewMessage from "./ChatComponents/AddNewMessage";
 import { useChatStore } from "@/lib/store/chatStore";
 import MainSearchResults from "./MainSearchResults";
+import EmptySearchResult from "./EmptyCallbacks/EmptySearchResult";
+import { FilteredFriendsValues } from "@/lib/services/friend";
 
 
 
 interface SearchBarProps{
     searchType: searchResults
     placeHolder: string
+    filtredFriends?: FilteredFriendsValues[]
 }
 
-export default function SearchBar({placeHolder,searchType}:SearchBarProps){
+export default function SearchBar({placeHolder,searchType,filtredFriends}:SearchBarProps){
+    if (!filtredFriends){
+        return null
+    }
     const [isOpen,setIsOpen] = useState<boolean>(false);
     const {clearCurrentMessage} = useChatStore();
     const dropDownRef = useRef<HTMLDivElement | null>(null)
@@ -80,9 +86,15 @@ export default function SearchBar({placeHolder,searchType}:SearchBarProps){
                 <div className="absolute left-0 right-0 z-48 bg-primary8 mt-1 rounded-b-lg p-3 shadow-2xl min-h-auto origin-top animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-3">
                     {searchType === "friend" ? 
                         (<>
-                            {Array.from({length:5}).map((_,index)=>(
-                                <AddFriend key={index}/>
-                            ))}
+                            {filtredFriends.length === 0 ? (
+                                <EmptySearchResult/>
+                            ) : (
+                                filtredFriends.map(friendRes =>{
+                                    return(
+                                        <AddFriend friendRes={friendRes} key={friendRes.id}/>
+                                    )
+                                })
+                            )}
                         </>) : searchType === 'chat' ? 
                         (
                         <>

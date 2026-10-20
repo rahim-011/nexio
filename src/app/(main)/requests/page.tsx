@@ -20,7 +20,7 @@ export default async function Reqeusts(){
             <div className="w-full  self-center flex flex-col gap-3 bg-primary9 p-3 rounded-lg min-h-120">
                 {receivedRequests.length === 0 ? (<EmptyRequests/>) : (receivedRequests.map(request =>{
                     return(
-                        <Request username={request.username} avatar={request.image} key={request.id}/>
+                        <Request username={request.username} avatar={request.avatar} key={request.requestId} requestId={request.requestId}/>
                     )
                 }))}
             </div>

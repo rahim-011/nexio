@@ -22,3 +22,8 @@ export type userInfos = {
 
 
 export type uploadFolders = 'posts' | 'avatars'
+
+
+
+export type manageFriendsActions = 'accept' | 'decline'
+export type FriendStatus = 'Friends' | 'pending' | 'accept' | null;
