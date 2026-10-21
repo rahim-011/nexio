@@ -1,26 +1,33 @@
-'use client'
+
+"use client";
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { usePostStore } from "@/lib/store/postStore";
-import FirstStepPostTitle from "./PostComponents/FirstStepPostTitle";
-import DefaultStepTitle from "./PostComponents/DefaultStepTitle";
-import FinalStepPostTitle from "./PostComponents/FinalStepPostTItle";
-import PostForm from "./PostComponents/PostForm";
+import FirstStepPostTitle from "./FirstStepPostTitle";
+import DefaultStepTitle from "./DefaultStepTitle";
+import FinalStepPostTitle from "./FinalStepPostTItle";
+import PostForm from "./PostForm";
 
-export default function PostModel({ closeModel }: { closeModel: () => void }) {
+export default function PostModel({
+    closeModel,
+}: {
+    closeModel: () => void;
+}) {
     const { currentStep } = usePostStore();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
+
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
 
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") closeModel();
         };
+
         window.addEventListener("keydown", onKeyDown);
 
         return () => {
@@ -33,7 +40,7 @@ export default function PostModel({ closeModel }: { closeModel: () => void }) {
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-primary7/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-primary7/60 p-3 backdrop-blur-sm sm:p-6"
             onMouseDown={(e) => {
                 if (e.target === e.currentTarget) closeModel();
             }}
@@ -42,16 +49,17 @@ export default function PostModel({ closeModel }: { closeModel: () => void }) {
                 type="button"
                 onClick={closeModel}
                 aria-label="Close"
-                className="absolute right-3 top-8 -translate-y-1/2 cursor-pointer rounded-full p-1.5 text-gray-400 transition-all hover:bg-white/10 hover:text-white"
+                className="absolute right-3 top-3 z-10 rounded-full p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white sm:right-6 sm:top-6"
             >
-                <X size={25} />
+                <X size={24} />
             </button>
+
             <div
                 role="dialog"
                 aria-modal="true"
-                className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-primary9 text-white shadow-2xl"
+                className="flex h-[min(700px,88dvh)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-primary9 text-white shadow-2xl"
             >
-                <div className="relative flex items-center justify-center border-b border-white/10">
+                <div className="shrink-0">
                     {currentStep === 0 ? (
                         <DefaultStepTitle />
                     ) : currentStep === 1 ? (
@@ -60,9 +68,8 @@ export default function PostModel({ closeModel }: { closeModel: () => void }) {
                         <FinalStepPostTitle />
                     ) : null}
                 </div>
-
-                <div className="flex-1 overflow-y-auto p-6">
-                    <PostForm />
+                <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-5">
+                    <PostForm onClose={()=>closeModel()}/>
                 </div>
             </div>
         </div>,

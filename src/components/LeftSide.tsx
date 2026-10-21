@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import ProfileIcon from "./ProfileIcon";
 import { useEffect, useRef, useState } from "react";
 import MainSearch from "./MainSearch";
-import PostModel from "./PostModel";
+import PostModel from "./PostComponents/PostModel";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { userInfos } from "@/lib/types";
@@ -20,7 +20,8 @@ interface LeftSideProps{
 
 
 export default function LeftSide({userInfos}:LeftSideProps){
-    const {setUserInfos} = useUserStore();
+    const {setUserInfos,cachedUserInfos} = useUserStore();
+    const {username} = cachedUserInfos
     useEffect(()=>{
         if (userInfos){
             setUserInfos(userInfos)
@@ -41,7 +42,7 @@ export default function LeftSide({userInfos}:LeftSideProps){
 
     const modelLinks = [
         {label: 'Settings', icon: <Settings size={22} className="text-grey3 mb-1"/>, path: '/settings/edit-profile'},
-        {label: 'Profile', icon: <User size={22} className="text-grey3 mb-1"/>, path: '/profile'},
+        {label: 'Profile', icon: <User size={22} className="text-grey3 mb-1"/>, path: `/profile/${username}`},
         {label: 'Log Out', icon: <Power size={22} className="text-error3 mb-1"/>, path: '/sign-in'},
     ];
 

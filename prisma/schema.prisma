@@ -45,6 +45,8 @@ model User {
   otpCodes      OtpCodes[]
   sentRequests  Requests[]      @relation("SentRequests")
   receivedRequests  Requests[]  @relation("ReceivedRequests")
+  comments Comment[]
+  likes    Like[]
   @@map("user")
 }
 
@@ -103,13 +105,44 @@ type Media{
 }
 model Post{
   id         String @id @default(auto()) @map("_id") @db.ObjectId
-  caption    String?
+  caption    String?    
   media      Media
   userId     String     @db.ObjectId
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
   user       User       @relation(fields: [userId],references: [id],onDelete:Cascade)
+  comments Comment[]
+  likes    Like[]
+}
+
+model Comment{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  postId   String      @db.ObjectId
+  userId   String      @db.ObjectId
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  post      Post        @relation(fields: [postId],references: [id],onDelete:Cascade)
+  user      User        @relation(fields: [userId],references: [id],onDelete:Cascade)
+
+  @@index([postId,created_at])
+}
+
+model Like{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  postId   String      @db.ObjectId
+  userId   String      @db.ObjectId
+  created_at  DateTime   @default(now())
+  updated_at  DateTime    @updatedAt
+
+
+
+  post     Post        @relation(fields: [postId],references: [id],onDelete:Cascade)
+  user     User        @relation(fields: [userId],references: [id],onDelete:Cascade)
+  @@index([userId])
+  @@unique([postId,userId])
 }
 
 model Chat{

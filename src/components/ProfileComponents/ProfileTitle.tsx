@@ -9,13 +9,16 @@ import { useUserStore } from "@/lib/store/userStore";
 
 export default function ProfileTitle(){
     const {cachedUserInfos} = useUserStore();
-    const {username,totalPosts,totalFriends,bio} = cachedUserInfos;
+    const {username,totalPosts,totalFriends,bio,name} = cachedUserInfos;
     return(
         <div className="rounded-lg flex flex-col gap-3 bg-primary9 p-4">
             <div className="  flex items-center  gap-5">
                 <ChangePfp/>
-                <div className="flex flex-col gap-2 text-grey1 justify-center">
-                    <h3 className="text-[1.4rem]">{username}</h3>
+                <div className="flex flex-col text-grey1 justify-center">
+                    <div className="flex flex-col">
+                        <h3 className="text-[1.6rem] font-semibold">{username}</h3>
+                        {name && <span className="text-grey1/70 text-[1.1rem]">{name}</span>}
+                    </div>
                     <div className="flex items-center gap-2">
                         <span className="text-[1rem]">{totalPosts} posts</span>
                         <span className="text-[1rem]">{totalFriends} friends</span>

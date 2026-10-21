@@ -21,6 +21,7 @@
     "cloudinary": "^2.11.0",
     "cn": "^0.4.0",
     "debouncer": "^1.1.2",
+    "emoji-picker-react": "^5.1.0",
     "gsap": "^3.15.0",
     "lucide-react": "^1.49.0",
     "mongodb": "^7.7.0",

@@ -73,7 +73,7 @@ export async function getFriends(filter:FiltersValues['search']){
                 )
             ));
             
-            const isFriend = currentUser?.friendsIds.includes(userId);
+            const isFriend = currentUser?.friendsIds.includes(user.id);
             return{
                 ...user,
                 requestId: request?.id,

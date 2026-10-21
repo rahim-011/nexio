@@ -21,13 +21,17 @@ interface AddFriendProps{
 export default function AddFriendBtn({receiverId,requestStatus,requestId}:AddFriendProps){
     const router = useRouter();
     const [btnStatus, setBtnStatus] = useState<string>(requestStatus || 'add friend');
+    console.log(btnStatus)
     const [isPending,setIsPending] = useState<boolean>(false);
-    const bgClass = btnStatus === 'pending' ? 'bg-primary2 text-white'
-                    : btnStatus === 'accept' ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-grey1 text-grey7';
+    const bgClass =
+    btnStatus === 'pending' ? 'bg-primary2 text-white'
+    : btnStatus === 'accept' ? 'bg-green-600 text-white hover:bg-green-700'
+    : btnStatus === 'friends' ? 'bg-blue-100 text-blue-700 border border-blue-200 cursor-default'
+    : 'bg-grey1 text-grey7 hover:bg-grey2';
 
 
     async function addFriend(){
-        if (isPending) return;
+        if (isPending || btnStatus === 'friends') return;
         try{
             if (btnStatus === 'pending'){
                 const result = await cancelFriendRequest(receiverId);

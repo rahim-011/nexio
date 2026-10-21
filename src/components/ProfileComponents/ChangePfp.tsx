@@ -39,8 +39,10 @@ export default function ChangePfp({onClose}:{onClose?:()=>void}){
             if (!uploaded){
                 throw Error('Failed to upload!')
             }
+            const value = {profileImage: uploaded.url};
             const url = uploaded.url;
             field.onChange(url);
+            await handleChangingPfp(value);
         }
         catch(error){
             console.log('Error processing image:',error)
@@ -53,7 +55,6 @@ export default function ChangePfp({onClose}:{onClose?:()=>void}){
     const handleChangingPfp = async (value:PfpValue) =>{
         try{
             const response = await changeAvatar(value);
-            console.log('server response',response)
             if (!response.success){
                 toast.error('Failed to upload profile picture');
                 return;
