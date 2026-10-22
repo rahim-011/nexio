@@ -12,9 +12,20 @@ export const postSchema = z.object({
     media: z.object({
         publicId: z.string().min(1,{message:'Public id is required!'}),
         resourceType: z.enum(['image','video']),
-        url: z.url().startsWith(`https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`),
+        url: z.url().refine(
+        (url) => {
+                try {
+                    return new URL(url).hostname === "res.cloudinary.com";
+                } catch {
+                    return false;
+                }
+            },
+            { message: "Invalid Cloudinary URL" }
+        ),
     }),
-    postCaption: z.string().min(10,{message:'Caption must be less than 200 characters'}).optional()
+    postCaption: z.string()
+    .max(200, { message: "Caption must not exceed 200 characters" })
+    .optional()
 })
 
 export const bioSchema = z.object({

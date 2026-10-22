@@ -12,7 +12,7 @@ interface PostStoreValues{
 }
 
 export const usePostStore = create<PostStoreValues>((set,get)=>({
-    currentStep:2,
+    currentStep:0,
     updateCurrentStep: (type:stepType) =>{
         const currentStep = get().currentStep;
         if (type === 'backward' && currentStep >0){

@@ -1,7 +1,8 @@
 
 import ProfilePosts from "@/components/ProfileComponents/ProfilePosts";
 import ProfileTitle from "@/components/ProfileComponents/ProfileTitle";
-import { getUserPosts } from "@/lib/services/posts";
+import { getUserProfileInfos } from "@/lib/services/posts";
+import { ProfileLabels } from "@/lib/types";
 import { User } from "@prisma/client";
 
 
@@ -11,15 +12,25 @@ export default async function Profile({params}:{params:Promise<{username:User['u
     if (!username){
         return null
     };
-    const userPostsRes = await getUserPosts(username);
-    if (!userPostsRes.success){
+    const userProfileInfosRes = await getUserProfileInfos(username);
+    if (!userProfileInfosRes.success || !userProfileInfosRes.userProfileInfos){
         return null
     };
-    const userPosts = userPostsRes.userPosts ?? [];
+    const userPosts = userProfileInfosRes.userProfileInfos.posts ?? [];
+    const userInfos = {
+        userId: userProfileInfosRes.userProfileInfos.id,
+        username: userProfileInfosRes.userProfileInfos.username,
+        name: userProfileInfosRes.userProfileInfos.name,
+        avatar: userProfileInfosRes.userProfileInfos.image,
+        profileLabel: userProfileInfosRes.userProfileInfos.profileLabel as ProfileLabels,
+        friendsIds: userProfileInfosRes.userProfileInfos.friendsIds,
+        bio: userProfileInfosRes.userProfileInfos.bio,
+        totalPosts: userProfileInfosRes.userProfileInfos.posts.length
+    }
     return(
         <main className="flex flex-col gap-2">
-            <ProfileTitle/>
-            <ProfilePosts userPosts={userPosts}/>
+            <ProfileTitle userInfos={userInfos}/>
+            <ProfilePosts userPosts={userPosts} username={username}/>
         </main>
     )
 }

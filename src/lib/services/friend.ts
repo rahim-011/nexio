@@ -4,7 +4,7 @@ import { User } from "@prisma/client";
 import { prisma } from "../prisma";
 import { verifyUserSession } from "./verifications";
 import { getCurrentUser } from "./user";
-
+import { clearUserCachedInfos } from "./user";
 
 
 
@@ -98,6 +98,134 @@ export async function getFriends(filter:FiltersValues['search']){
 export type FilteredFriendsValues =
     NonNullable<Awaited<ReturnType<typeof getFriends>>['filtredFriends']>[number];
 
+
+
+
+export async function getProfileFriends(friendsIds:User['friendsIds']){
+    try{
+        await verifyUserSession();
+        if (!friendsIds){
+            throw new Error('FriendsIds must be provided!');
+        }
+        const listedFriends = await prisma.user.findMany({
+                where:{
+                    id:{
+                        in: friendsIds
+                    }
+                },
+                select:{
+                    name:true,
+                    username:true,
+                    image:true,
+                    id:true,
+                }
+            })
+        
+        return{
+            success:true,
+            listedFriends
+        }
+    }
+    catch(error){
+        console.log('Failed to get profile friends: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong, please try again.'
+        }
+    }
+}
+
+export type ListedFriendsValue = 
+  NonNullable<Awaited<ReturnType<typeof getProfileFriends>>['listedFriends']>[number];
+
+
+
+
+
+
+
+
+
+
+export async function removeFriend(friendId:User['id']){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        if (!friendId){
+            throw new Error('Friend id is required!');
+        }
+        if (userId === friendId){
+            throw new Error('Invalid request!')
+        }
+        const [targetFriend,currentUser] = await Promise.all([
+            prisma.user.findUnique({
+                where:{
+                    id:friendId
+                },
+                select:{
+                    id:true,
+                    friendsIds:true
+                }
+            }),
+            prisma.user.findUnique({
+                where:{
+                    id:userId
+                },
+                select:{
+                    id:true,
+                    friendsIds:true
+                }
+            })
+        ])
+        if (!targetFriend || !currentUser){
+            throw new Error('Missing user!')
+        }
+        const areFriends = targetFriend.friendsIds.includes(userId) && currentUser.friendsIds.includes(friendId);
+        if (!areFriends){
+            throw new Error('Invalid request')
+        }
+        await prisma.$transaction(async (tx) =>{
+            await tx.user.update({
+                where:{
+                    id:userId
+                },
+                data:{
+                    friendsIds:{
+                        set: currentUser.friendsIds.filter(id => id != friendId)
+                    }
+                }
+            })
+            await tx .user.update({
+                where:{
+                    id:friendId
+                },
+                data:{
+                    friendsIds:{
+                        set: targetFriend.friendsIds.filter(id => id != userId)
+                    }
+                }
+            })
+        })
+        const [senderCleanedCache,receiverCleanedCache] = await Promise.all([
+            clearUserCachedInfos(friendId,'/profile'),
+            clearUserCachedInfos(userId,'/profile')
+        ])
+        if (!senderCleanedCache.success || !receiverCleanedCache.success){
+            console.error("Failed to clear user cache after removing friend");
+        }
+        return{
+            success:true,
+            message:'Friend has been removed successfully!'
+        }
+    }
+    catch(error){
+        console.log('Failed to remove friend: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong, please try again!'
+        }
+    }
+}
 
 
 

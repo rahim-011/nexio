@@ -216,13 +216,10 @@ export async function manageFriendRequest(action:manageFriendsActions,requestId:
                 if (friendState){
                     throw new Error('This user is already on your friend list')
                 }
-                await tx.requests.update({
+                await tx.requests.delete({
                     where:{
                         id:requestId
                     },
-                    data:{
-                        status:'accepted'
-                    }
                 })
                 await tx.user.update({
                     where:{
@@ -251,7 +248,7 @@ export async function manageFriendRequest(action:manageFriendsActions,requestId:
                 clearUserCachedInfos(receiverId,'/profile')
             ])
             if (!senderCleanedCache.success || !receiverCleanedCache.success){
-                throw new Error('Failed to invalidate the sender and receiver cache!')
+                console.log('Failed to invalidate the sender and receiver cache!')
             }
             return{
                 success:true,
@@ -259,14 +256,11 @@ export async function manageFriendRequest(action:manageFriendsActions,requestId:
             }
         }else{
             if (action === 'decline'){
-                const currentRequest = await prisma.requests.updateMany({
+                const currentRequest = await prisma.requests.deleteMany({
                     where:{
                         id:requestId,
                         status:'pending',
                         receiverId: userId
-                    },
-                    data:{
-                        status:'rejected'
                     }
                 })
                 if (currentRequest.count !== 1){

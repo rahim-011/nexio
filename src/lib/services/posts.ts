@@ -11,14 +11,21 @@ import { clearUserCachedInfos } from "./user";
 
 
 
-export async function getUserPosts(username:User['username']){
+export async function getUserProfileInfos(username:User['username']){
     try{
-        await verifyUserSession();
-        const targetUser = await prisma.user.findUnique({
+        const session = await verifyUserSession();
+        const currentUserId = session.user.id;
+        const targetUserInfos = await prisma.user.findUnique({
             where:{
                 username
             },
             select:{
+                id:true,
+                username:true,
+                name:true,
+                friendsIds:true,
+                image:true,
+                bio:true,
                 posts:{
                     select:{
                         id:true,
@@ -31,31 +38,21 @@ export async function getUserPosts(username:User['username']){
                                 url:true
                             }
                         },
-                        user:{
-                            select:{
-                                username:true,
-                                image:true,
-                                name:true,
-                            }
-                        }
                     }
                 }
             }
         })
-        if(!targetUser){
+        if(!targetUserInfos){
             throw new Error('Invalid posts request!')
         }
-        const formattedPostsData = targetUser.posts.map(post =>({
-            ...post,
-            mediaUrl: post.media.url,
-            mediaType:  post.media.resourceType,
-            username: post.user.username,
-            name: post.user.name,
-            avatar: post.user.image
-        }))
+        const profileLabel = targetUserInfos.id === currentUserId ? 'Edit Profile' : targetUserInfos.friendsIds.includes(currentUserId) ? 'Remove Friend' : 'Add Friend';
+        const formattedTargetUserInfos = {
+            ...targetUserInfos,
+            profileLabel,
+        }
         return {
             success:true,
-            userPosts: formattedPostsData
+            userProfileInfos: formattedTargetUserInfos
         }
     }
     catch(error){
@@ -66,9 +63,9 @@ export async function getUserPosts(username:User['username']){
         }
     }
 }
-export type UserPosts = NonNullable<
-    Awaited<ReturnType<typeof getUserPosts>>["userPosts"]
->[number];
+export type UserProfileInfosValue = NonNullable<
+    Awaited<ReturnType<typeof getUserProfileInfos>>["userProfileInfos"]
+>;
 
 
 

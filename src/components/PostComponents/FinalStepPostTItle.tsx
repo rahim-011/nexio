@@ -25,7 +25,6 @@ export default function FirstStepPostTitle() {
             <button
                 type="submit"
                 form="post-form"
-                onClick={() => updateCurrentStep("forward")}
                 className="rounded-lg px-4 py-2 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-400/10 hover:text-blue-300 active:scale-95"
             >
                 Share

@@ -37,6 +37,7 @@ export default function PostForm({onClose}:{onClose:()=>void}) {
             }
             toast.success("Post created successfully!");
             onClose();
+            usePostStore.setState({currentStep:0});
             router.refresh();
         } catch {
             toast.error("Something went wrong, please try again.");

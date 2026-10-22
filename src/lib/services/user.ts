@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import { EditProfileFormValues } from "@/components/SettingsComponents/EditProfileForm";
 import { PfpValue } from "@/components/ProfileComponents/ChangePfp";
 import { EditEmailValue } from "@/components/SettingsComponents/EditEmailForm";
+import { User } from "@prisma/client";
 
 
 
@@ -332,4 +333,32 @@ export const changeUserEmail = async (value:EditEmailValue) =>{
     }
 }
 
+
+
+
+
+export async function getUserProfileInfos(username:User['username']){
+    try{    
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const targetUser = await prisma.user.findUnique({
+            where:{
+                username
+            }
+        });
+        if (targetUser?.id == userId){
+            return{
+                success:true,
+                
+            }
+        }
+    }
+    catch(error){
+        console.log('Failed to get user profile infos: ',error)
+        return{
+            success:false,
+            error:'Something went wrong, please try again'
+        }
+    }
+}
 
