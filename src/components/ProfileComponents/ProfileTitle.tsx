@@ -8,6 +8,11 @@ import FriendsModel from "./FriendsModel";
 import { ProfileLabels } from "@/lib/types";
 import { useUserStore } from "@/lib/store/userStore";
 import Image from "next/image";
+import { toast } from "sonner";
+import { User } from "@prisma/client";
+import { removeFriend } from "@/lib/services/friend";
+import { useRouter } from "next/navigation";
+import ConfirmModel from "../ConfirmModel";
 
 interface ProfileTitleProps {
     name: string | null;
@@ -28,6 +33,10 @@ export default function ProfileTitle({
     const [isOpen, setIsOpen] = useState(false);
     const { cachedUserInfos } = useUserStore();
     const isMyProfile = cachedUserInfos.username === userInfos.username;
+    const [isRemoving,setIsRemoving] = useState<boolean>(false);
+    const [isConfirmOpen,setIsConfirmOpen] = useState<boolean>(false);
+    const router = useRouter();
+
 
     const profileLabelStyling: Record<ProfileLabels, string> = {
         "Edit Profile":
@@ -39,6 +48,23 @@ export default function ProfileTitle({
         Pending:
             "cursor-not-allowed border border-white/10 bg-primary7 text-grey1/60",
     };
+
+    const handleRemoveFriend = async(friendId:User['id']) =>{
+        try{
+            setIsRemoving(true);
+            const result = await removeFriend(friendId);
+            if(!result.success){
+                toast.error('Failed to remove friend');
+                return;
+            } 
+            toast.success('Friend has been removed successfully');
+            setIsConfirmOpen(false);
+            router.refresh();
+        }
+        catch(error){
+            toast.error('Something went wrong, please try again.');
+        }
+    }
 
 
     return (
@@ -117,6 +143,7 @@ export default function ProfileTitle({
                     >
                         Message
                     </button>
+                    {isConfirmOpen && <ConfirmModel sub={"Are you sure you want to remove this friend? You won't be able to see them in your friends list anymore"} title={"Remove Friend"} isLoading={isRemoving} onClose={()=>setIsOpen(false)} onConfirm={()=>handleRemoveFriend(userInfos.userId)}/>}
                 </div>
             )}
 
