@@ -32,6 +32,10 @@ export const bioSchema = z.object({
     bio: z.string().max(160,"Bio must be less than 160 characters")
 })
 
+export const commentSchema = z.object({
+    postComment: z.string().max(160,{message:'Post comment must be less than 160 characters'})
+})
+
 
 export const editProfileSchema = z.object({
     name: z.string().min(2,{message:'Name must be at least 2 characters'}).max(10,{message:'Name cannot exceed 10 characters'}).optional(),

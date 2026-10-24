@@ -50,7 +50,7 @@ export default function CaptionForm() {
                                 className="rounded-lg p-1 transition-colors hover:bg-white/10 hover:text-white"
                                 onClick={() => setIsOpen((prev) => !prev)}
                             >
-                                <Smile className="h-5 w-5" />
+                                <Smile className="h-5 w-5 cursor-pointer" />
                             </button>
 
                             {isOpen && (

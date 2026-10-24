@@ -13,6 +13,8 @@ import { User } from "@prisma/client";
 import { removeFriend } from "@/lib/services/friend";
 import { useRouter } from "next/navigation";
 import ConfirmModel from "../ConfirmModel";
+import { cancelFriendRequest, sendFriendRequest } from "@/lib/services/request";
+import LoadingSpinner from "../LoadingSpinner";
 
 interface ProfileTitleProps {
     name: string | null;
@@ -31,22 +33,26 @@ export default function ProfileTitle({
     userInfos: ProfileTitleProps;
 }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isSending,setIsSending] = useState<boolean>(false);
+    const [isCancelling,setIsCancelling] = useState<boolean>(false);
+    const [btnStatus,setBtnStatus] = useState<ProfileLabels>(userInfos.profileLabel);
     const { cachedUserInfos } = useUserStore();
     const isMyProfile = cachedUserInfos.username === userInfos.username;
     const [isRemoving,setIsRemoving] = useState<boolean>(false);
     const [isConfirmOpen,setIsConfirmOpen] = useState<boolean>(false);
     const router = useRouter();
-
-
     const profileLabelStyling: Record<ProfileLabels, string> = {
         "Edit Profile":
-            "bg-primary5 text-grey1 hover:brightness-115",
+            "border border-sky-400/25 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 hover:text-sky-200",
+
         "Remove Friend":
-            "border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300",
+            "border border-rose-500/25 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300",
+
         "Add Friend":
-            "bg-primary5 text-white hover:brightness-115",
+            "border border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300",
+
         Pending:
-            "cursor-not-allowed border border-white/10 bg-primary7 text-grey1/60",
+            "border border-violet-400/20 bg-violet-500/10 text-violet-300/80 hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
     };
 
     const handleRemoveFriend = async(friendId:User['id']) =>{
@@ -59,13 +65,49 @@ export default function ProfileTitle({
             } 
             toast.success('Friend has been removed successfully');
             setIsConfirmOpen(false);
+            setBtnStatus('Add Friend');
             router.refresh();
         }
         catch(error){
             toast.error('Something went wrong, please try again.');
         }
     }
-
+    const handleSendingRequest = async(friendId:User['id']) =>{
+        try{
+            setIsSending(true);
+            const result = await sendFriendRequest(friendId);
+            if (!result.success){
+                toast.error('Failed to send friend request.');
+                return;
+            }
+            toast.success('Friend request has been send successfully.');setBtnStatus('Pending');
+            router.refresh();
+        }
+        catch(error){
+            toast.error('Somthing went wrong, please try again.');
+        }
+        finally{
+            setIsSending(false);
+        }
+    }
+    const handleCancelingRequest = async(receiverId:User['id'])=>{
+        try{
+            setIsCancelling(true);
+            const result = await cancelFriendRequest(receiverId);
+            if (!result.success) {
+                    toast.error("Failed to cancel the friend request.");
+                    return;
+                }
+            setBtnStatus("Add Friend");
+            toast.success("Friend request cancelled");
+        }
+        catch(error){
+            toast.error("Something went wrong, please try again.");
+        }
+        finally{
+            setIsCancelling(false);
+        }
+    }
 
     return (
         <div className="flex flex-col gap-4 rounded-xl border border-white/5 bg-primary9 p-5">
@@ -127,14 +169,16 @@ export default function ProfileTitle({
             ) : (
                 <div className="flex w-full flex-wrap gap-3">
                     <button
+                        onClick={btnStatus === 'Remove Friend' ? ()=>setIsConfirmOpen(true) : btnStatus === 'Add Friend' ? () => handleSendingRequest(userInfos.userId) : (btnStatus !== 'Edit Profile' && btnStatus === 'Pending') ? ()=>handleCancelingRequest(userInfos.userId) :  undefined}
                         type="button"
                         disabled={
-                            userInfos.profileLabel === "Pending" ||
-                            userInfos.profileLabel === "Edit Profile"
+                            btnStatus === "Edit Profile" ||
+                            isSending ||
+                            isCancelling
                         }
-                        className={`flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition sm:flex-none sm:min-w-40 sm:text-base cursor-pointer ${profileLabelStyling[userInfos.profileLabel]}`}
+                        className={`flex items-center justify-center ${isSending ? 'opacity-80' : ''} flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition sm:flex-none sm:min-w-40 sm:text-base cursor-pointer ${profileLabelStyling[btnStatus]}`}
                     >
-                        {userInfos.profileLabel}
+                        {(isSending || isCancelling) ? <LoadingSpinner/> : btnStatus}
                     </button>
 
                     <button

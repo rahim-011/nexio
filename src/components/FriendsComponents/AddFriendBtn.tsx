@@ -20,13 +20,13 @@ export default function AddFriendBtn({ receiverId, requestStatus, requestId }: A
     const [isPending, setIsPending] = useState<boolean>(false);
 
     const bgClass =
-        btnStatus === "pending"
-            ? "bg-primary2 text-white"
-            : btnStatus === "accept"
-              ? "bg-green-600 text-white hover:bg-green-700"
-              : btnStatus === "friends"
-                ? "bg-blue-100 text-blue-700 border border-blue-200 cursor-default"
-                : "bg-grey1 text-grey7 hover:bg-grey2";
+  btnStatus === "pending"
+    ? "border border-violet-400/20 bg-violet-500/10 text-violet-300/80 hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
+    : btnStatus === "accept"
+      ? "bg-green-600 text-white hover:bg-green-700"
+      : btnStatus === "friends"
+        ? "border border-rose-500/25 bg-rose-500/10 text-rose-400 cursor-default"
+        : "border border-emerald-500/25 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300";
 
     async function addFriend() {
         if (isPending || btnStatus === "friends") return;
@@ -74,8 +74,7 @@ export default function AddFriendBtn({ receiverId, requestStatus, requestId }: A
     return (
         <button
             type="button"
-            disabled={isPending}
-            className={`${bgClass} flex h-10 w-32 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-3 text-center transition-all hover:brightness-95 disabled:cursor-wait disabled:opacity-100`}
+            className={`${bgClass} flex h-10 w-32 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-3 text-center transition-all hover:brightness-95  cursor-pointer`}
             onClick={(e) => {
                 e.stopPropagation();
                 addFriend();

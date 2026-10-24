@@ -3,40 +3,46 @@
 import type { ResourceTypes, User } from "@prisma/client";
 import EmptyPosts from "../EmptyCallbacks/EmptyPosts";
 import Post from "./Post";
-import { UserProfileInfosValue } from "@/lib/services/posts";
 import { useUserStore } from "@/lib/store/userStore";
 import EmptyPostsViste from "../EmptyCallbacks/EmpyPostsVisite";
+import { Fragment, useState } from "react";
+import InspectPost from "../PostComponents/InspectPost";
 
 
 
-type ProfilePostsValues = {
-    userPosts: {
+export type userPost = {
         id: string;
+        user:User;
         media: {
             resourceType: ResourceTypes;
             url: string;
         };
+        postedTime: Date
         caption: string | null;
         comments: {
             id: string;
             content: string;
-            userId: string;
+            user: User
             postId: string;
-            created_at: Date;
-            updated_at: Date;
+            commentedTime: Date;
         }[];
         likes: {
             id: string;
             userId: string;
             postId: string;
         }[];
-    }[];
+    };
+;
+
+type ProfilePostsValues = {
+    userPosts: userPost[]
     username: string;
 };
 
 
 
 export default function ProfilePosts({userPosts,username}:ProfilePostsValues){
+    const [isOpen,setIsOpen] = useState<boolean>(false);
     const {cachedUserInfos} = useUserStore();
     const isMyProfile = username === cachedUserInfos.username;
     return(
@@ -50,9 +56,14 @@ export default function ProfilePosts({userPosts,username}:ProfilePostsValues){
                 )
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2">
-                    {userPosts.map((post) => (
-                        <Post key={post.id} postInfos={post} />
-                    ))}
+                    {userPosts.map(post => {
+                        return(
+                            <Fragment key={post.id}>
+                                <Post postInfos={post} onOpen={()=>setIsOpen(true)}/>
+                                {isOpen && <InspectPost onClose={()=>setIsOpen(false)} postInfos={post}/>}
+                            </Fragment>
+                        )
+                    })}
                 </div>
             )}
         </div>

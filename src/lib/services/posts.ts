@@ -30,8 +30,18 @@ export async function getUserProfileInfos(username:User['username']){
                     select:{
                         id:true,
                         likes:true,
-                        comments:true,
+                        user:true,
+                        comments:{
+                            select:{
+                                user:true,
+                                id:true,
+                                content:true,
+                                created_at:true,
+                                postId:true
+                            }
+                        },
                         caption:true,
+                        createdAt:true,
                         media:{
                             select:{
                                 resourceType:true,
@@ -45,10 +55,27 @@ export async function getUserProfileInfos(username:User['username']){
         if(!targetUserInfos){
             throw new Error('Invalid posts request!')
         }
-        const profileLabel = targetUserInfos.id === currentUserId ? 'Edit Profile' : targetUserInfos.friendsIds.includes(currentUserId) ? 'Remove Friend' : 'Add Friend';
+        const currentRequest = await prisma.requests.findFirst({
+            where:{
+                senderId: currentUserId,
+                receiverId: targetUserInfos.id
+            },
+            select:{
+                status:true
+            }
+        })
+        const profileLabel = targetUserInfos.id === currentUserId ? 'Edit Profile' : targetUserInfos.friendsIds.includes(currentUserId) ? 'Remove Friend' : currentRequest?.status === 'pending' ? 'Pending' : 'Add Friend';
         const formattedTargetUserInfos = {
             ...targetUserInfos,
             profileLabel,
+            posts: targetUserInfos.posts.map(post => ({
+                ...post,
+                postedTime: post.createdAt ? new Date(post.createdAt) : undefined,
+                comments: post.comments.map(comment => ({
+                    ...comment,
+                    commentedTime: comment.created_at ? new Date(comment.created_at) : undefined
+                }))
+            })),
         }
         return {
             success:true,

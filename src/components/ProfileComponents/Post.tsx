@@ -1,15 +1,14 @@
 import Image from "next/image"
 import { Heart,MessageCircle } from "lucide-react"
-import { UserPosts } from "@/lib/services/posts"
 
 
 
 
 
-export default function Post({postInfos}:{postInfos:UserPosts}){
-    //here u can add that model to show the post infos when user clicks to it show the leftside of the media img or video and the right one for the comments , who send it and the likes with comments and u can also show the likes for each comments ....... ;
+
+export default function Post({postInfos,onOpen}:{postInfos:any,onOpen:()=>void}){
     return(
-        <div className="relative cursor-pointer rounded-t-lg overflow-hidden group">
+        <div className="relative cursor-pointer rounded-t-lg overflow-hidden group" onClick={()=>onOpen()}>
             {postInfos.media.resourceType === 'image' ? (<Image
                 alt="post image"
                 src={postInfos.media.url}
