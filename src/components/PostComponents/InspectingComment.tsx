@@ -53,7 +53,7 @@ export default function InspectingComment({commentInfos,onClose,onDeleteComment}
             </div>
 
             <div className="relative shrink-0">
-                <DeleteModel ariaLabel="comment options" onConfirm={()=>handleDeleteComment(commentInfos.id)} loading={isRemoving}/>
+                <DeleteModel ariaLabel="comment options" onConfirm={()=>handleDeleteComment(commentInfos.id)} loading={isRemoving} ownerUsername={commentInfos.user.username}/>
             </div>
         </div>
     );

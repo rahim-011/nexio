@@ -59,7 +59,7 @@ export default function InspectPost({ onClose,postInfos,currentUserId }: Inspect
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-primary5 bg-primary8 px-4 py-3 sm:px-5 sm:py-4">
             <div className="flex items-center gap-5">
                 <ProfileIcon username={postInfos.user.username} avatar={postInfos.user.image} onClose={()=>onClose()}/>
-                {isMyPost && (<DeleteModel ariaLabel="post options" onConfirm={()=>handleDeletePost(postInfos.id)} loading={isRemoving}/> )}
+                {isMyPost && (<DeleteModel ariaLabel="post options" onConfirm={()=>handleDeletePost(postInfos.id)} loading={isRemoving} ownerUsername={postInfos.user.username}/> )}
             </div>
 
           <button

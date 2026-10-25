@@ -3,18 +3,19 @@
 import { useState,useRef,useEffect } from "react";
 import { Ellipsis,Trash2 } from "lucide-react";
 import LoadingSpinner from "./LoadingSpinner";
-import { Comment } from "@prisma/client";
-
-
+import { useUserStore } from "@/lib/store/userStore";
+import { User } from "@prisma/client";
 
 interface DeleteModelProps{
     ariaLabel: string
     onConfirm: () =>void
     loading : boolean
+    ownerUsername?: User['username']
 }
 
-export default function DeleteModel({ariaLabel,onConfirm,loading}:DeleteModelProps){
+export default function DeleteModel({ariaLabel,onConfirm,loading,ownerUsername}:DeleteModelProps){
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const {cachedUserInfos} = useUserStore();
     const closingRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
         function closeRemovingModel(e: MouseEvent) {
@@ -25,6 +26,7 @@ export default function DeleteModel({ariaLabel,onConfirm,loading}:DeleteModelPro
         document.addEventListener('mousedown', closeRemovingModel);
         return () => document.removeEventListener('mousedown', closeRemovingModel);
     }, [isOpen]);
+    if (cachedUserInfos.username !== ownerUsername) return null;
     return(
         <div className="relative shrink-0" ref={closingRef}>
             <button
