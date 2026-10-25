@@ -45,7 +45,7 @@ export default function DeleteModel({ariaLabel,onConfirm,loading}:DeleteModelPro
                         className={`flex w-full items-center gap-2 justify-center rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-500 cursor-pointer ${loading ? 'opacity-80' : ''}`}
                     >
                         {loading ? <LoadingSpinner/> :
-                        <><Trash2 className="h-4 w-4" />'Delete'</> }
+                        <><Trash2 className="h-4 w-4" />Delete</> }
                     </button>
                 </div>
             )}

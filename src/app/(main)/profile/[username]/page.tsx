@@ -30,7 +30,7 @@ export default async function Profile({params}:{params:Promise<{username:User['u
     return(
         <main className="flex flex-col gap-2">
             <ProfileTitle userInfos={userInfos}/>
-            <ProfilePosts userPosts={userPosts} username={username}/>
+            <ProfilePosts userPosts={userPosts} currentUserId={userProfileInfosRes.userProfileInfos.currentUserId} username={username}/>
         </main>
     )
 }

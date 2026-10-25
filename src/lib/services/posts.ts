@@ -6,6 +6,7 @@ import { prisma } from "../prisma";
 import { PostFormValues } from "@/components/PostComponents/PostForm";
 import { postSchema } from "@/schemas/userSchema";
 import { clearUserCachedInfos } from "./user";
+import { LikeActions } from "../types";
 
 
 
@@ -67,13 +68,14 @@ export async function getUserProfileInfos(username:User['username']){
         const profileLabel = targetUserInfos.id === currentUserId ? 'Edit Profile' : targetUserInfos.friendsIds.includes(currentUserId) ? 'Remove Friend' : currentRequest?.status === 'pending' ? 'Pending' : 'Add Friend';
         const formattedTargetUserInfos = {
             ...targetUserInfos,
+            currentUserId:currentUserId,
             profileLabel,
             posts: targetUserInfos.posts.map(post => ({
                 ...post,
-                postedTime: post.createdAt ? new Date(post.createdAt) : undefined,
+                postedTime: post.createdAt,
                 comments: post.comments.map(comment => ({
                     ...comment,
-                    commentedTime: comment.created_at ? new Date(comment.created_at) : undefined
+                    commentedTime: comment.created_at
                 }))
             })),
         }
@@ -184,6 +186,74 @@ export async function deletePost(postId:Post['id']){
         return{
             success:false,
             error:'Something went wrong, please try again'
+        }
+    }
+}
+
+
+
+
+
+
+export async function togglePostLike(postId:Post['id'],action:LikeActions){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        if(!postId){
+            throw new Error('Post id is required!')
+        }
+        const actions = ['like','unlike'];
+        if (!actions.includes(action)){
+            throw new Error('Invalid request action')
+        }
+        const isLiked = await prisma.like.findUnique({
+            where:{
+                postId_userId:{
+                    postId,
+                    userId
+                }
+            }
+        })
+        if (action === 'like'){
+            
+            if (isLiked){
+                throw new Error('This post is already liked!')
+            }
+            await prisma.like.create({
+                data:{
+                    postId:postId,
+                    userId:userId
+                }
+            })
+            return{
+                success:true,
+                message:"Post liked successfully!"
+            }
+        }else{
+            if(action === 'unlike'){
+                if (!isLiked){
+                    throw new Error('Invalid unlike request')
+                }
+            }
+            await prisma.like.delete({
+                where:{
+                   postId_userId:{
+                    postId,
+                    userId
+                   }
+                }
+            })
+            return{
+                success:true,
+                message:'Post unliked successfully!'
+            }
+        }
+    }
+    catch(error){
+        console.log('Failed to create like for the post: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong, please try again.'
         }
     }
 }

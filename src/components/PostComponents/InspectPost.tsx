@@ -12,13 +12,16 @@ import { Post } from "@prisma/client";
 import { toast } from "sonner";
 import { deletePost } from "@/lib/services/posts";
 import { useRouter } from "next/navigation";
+import { User } from "@prisma/client";
 
 interface InspectPostProps {
   onClose: () => void;
   postInfos: userPost
+  currentUserId: User['id']
 }
 
-export default function InspectPost({ onClose,postInfos }: InspectPostProps) {
+export default function InspectPost({ onClose,postInfos,currentUserId }: InspectPostProps) {
+    console.log('Post infos: ',postInfos);
     const router = useRouter();
     const [isRemoving,setIsRemoving] = useState<boolean>(false);
     const {cachedUserInfos} = useUserStore();
@@ -92,9 +95,9 @@ export default function InspectPost({ onClose,postInfos }: InspectPostProps) {
             </div>
 
           <div className="min-h-0 flex-1 overflow-hidden border-t border-primary5 md:border-l md:border-t-0">
-            <InspectPostSub onClose={()=>onClose()} caption={postInfos.caption || ''} postedTime={postInfos.postedTime} totalLikes={postInfos.likes.length} comments={postInfos.comments} posterInfos={{
+            <InspectPostSub currentUserId={currentUserId} onClose={()=>onClose()} caption={postInfos.caption || ''} postedTime={postInfos.postedTime} likes={postInfos.likes} comments={postInfos.comments} posterInfos={{
             username: postInfos.user.username,
-            avatar: postInfos.user.image,
+            avatar: postInfos.user.image
             }} postId={postInfos.id}/>
           </div>
         </div>

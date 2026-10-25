@@ -7,6 +7,7 @@ import { useUserStore } from "@/lib/store/userStore";
 import EmptyPostsViste from "../EmptyCallbacks/EmpyPostsVisite";
 import { Fragment, useState } from "react";
 import InspectPost from "../PostComponents/InspectPost";
+import { useRouter } from "next/navigation";
 
 
 
@@ -37,13 +38,16 @@ export type userPost = {
 type ProfilePostsValues = {
     userPosts: userPost[]
     username: string;
+    currentUserId: User['id']
 };
 
 
 
-export default function ProfilePosts({userPosts,username}:ProfilePostsValues){
+export default function ProfilePosts({userPosts,username,currentUserId}:ProfilePostsValues){
+    console.log('user posts:',userPosts);
     const [isOpen,setIsOpen] = useState<boolean>(false);
     const {cachedUserInfos} = useUserStore();
+    const router = useRouter();
     const isMyProfile = username === cachedUserInfos.username;
     return(
         <div className="flex flex-col gap-2 p-2">
@@ -60,7 +64,7 @@ export default function ProfilePosts({userPosts,username}:ProfilePostsValues){
                         return(
                             <Fragment key={post.id}>
                                 <Post postInfos={post} onOpen={()=>setIsOpen(true)}/>
-                                {isOpen && <InspectPost onClose={()=>setIsOpen(false)} postInfos={post}/>}
+                                {isOpen && <InspectPost onClose={()=>{setIsOpen(false);router.refresh()}} postInfos={post} currentUserId={currentUserId}/>}
                             </Fragment>
                         )
                     })}
