@@ -1,6 +1,6 @@
 'use server'
 
-import { User } from "@prisma/client";
+import { Post, User } from "@prisma/client";
 import { verifyUserSession } from "./verifications";
 import { prisma } from "../prisma";
 import { PostFormValues } from "@/components/PostComponents/PostForm";
@@ -135,6 +135,55 @@ export async function createPost(values:PostFormValues){
         return{
             success:false,
             error:'Something went wrong, please try again.'
+        }
+    }
+}
+
+
+
+
+export async function deletePost(postId:Post['id']){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        if (!postId){
+            throw new Error('Invalid request');
+        }
+        const existingPost = await prisma.post.findUnique({
+            where:{
+                id:postId,
+            }
+        })
+        if (!existingPost){
+            throw new Error('Post does not exists');
+        }
+        if (existingPost.userId !== userId){
+            throw new Error("You are not allowed to delete this post")
+        }
+        await prisma.post.delete({
+            where:{
+                id:postId
+            }
+        });
+        try{
+            const result = await clearUserCachedInfos(userId,'/profile');
+            if (!result.success){
+                throw new Error('Failed to invalidate user cache')
+            }
+        }
+        catch(error){
+            throw new Error('Something went wrong, please try again.');
+        }
+        return{
+            success:true,
+            message:'Post has been deleted successfully!'
+        }
+    }
+    catch(error){
+        console.log('Failed to delete this post: ',error);
+        return{
+            success:false,
+            error:'Something went wrong, please try again'
         }
     }
 }

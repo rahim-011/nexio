@@ -2,14 +2,18 @@
 
 import { useState,useRef,useEffect } from "react";
 import { Ellipsis,Trash2 } from "lucide-react";
+import LoadingSpinner from "./LoadingSpinner";
+import { Comment } from "@prisma/client";
 
 
 
 interface DeleteModelProps{
     ariaLabel: string
+    onConfirm: () =>void
+    loading : boolean
 }
 
-export default function DeleteModel({ariaLabel}:DeleteModelProps){
+export default function DeleteModel({ariaLabel,onConfirm,loading}:DeleteModelProps){
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const closingRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
@@ -36,11 +40,12 @@ export default function DeleteModel({ariaLabel}:DeleteModelProps){
                 <div className="absolute right-0 top-full z-20 mt-1 w-36 overflow-hidden rounded-xl border border-primary5 bg-primary8 p-1 shadow-xl" ref={closingRef}>
                     <button
                         type="button"
-                        onClick={() => setIsOpen(false)}
-                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-500 cursor-pointer"
+                        disabled={loading}
+                        onClick={() => onConfirm()}
+                        className={`flex w-full items-center gap-2 justify-center rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-500 cursor-pointer ${loading ? 'opacity-80' : ''}`}
                     >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
+                        {loading ? <LoadingSpinner/> :
+                        <><Trash2 className="h-4 w-4" />'Delete'</> }
                     </button>
                 </div>
             )}

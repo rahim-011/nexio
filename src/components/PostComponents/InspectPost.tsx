@@ -7,6 +7,11 @@ import ProfileIcon from "../ProfileIcon";
 import { userPost } from "../ProfileComponents/ProfilePosts";
 import DeleteModel from "../DeleteModel";
 import { useUserStore } from "@/lib/store/userStore";
+import { useState } from "react";
+import { Post } from "@prisma/client";
+import { toast } from "sonner";
+import { deletePost } from "@/lib/services/posts";
+import { useRouter } from "next/navigation";
 
 interface InspectPostProps {
   onClose: () => void;
@@ -14,9 +19,31 @@ interface InspectPostProps {
 }
 
 export default function InspectPost({ onClose,postInfos }: InspectPostProps) {
+    const router = useRouter();
+    const [isRemoving,setIsRemoving] = useState<boolean>(false);
     const {cachedUserInfos} = useUserStore();
     const {username} = cachedUserInfos;
-    const isMyPost = username === postInfos.user.username; 
+    const isMyPost = username === postInfos.user.username;
+    
+    const handleDeletePost = async(postId:Post['id'])=>{
+      try{
+        setIsRemoving(true);
+        const result = await deletePost(postId);
+        if (!result.success){
+          toast.error('Failed to delete this post, please try again.');
+          return;
+        }
+        toast.success('Post has been deleted successfully');
+        onClose();
+        router.refresh();
+      }
+      catch(error){
+        toast.error('Somthing went wrong, please try again.')
+      }
+      finally{
+        setIsRemoving(false);
+      }
+    }
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-primary7/80 backdrop-blur-sm p-4"
@@ -29,7 +56,7 @@ export default function InspectPost({ onClose,postInfos }: InspectPostProps) {
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-primary5 bg-primary8 px-4 py-3 sm:px-5 sm:py-4">
             <div className="flex items-center gap-5">
                 <ProfileIcon username={postInfos.user.username} avatar={postInfos.user.image} onClose={()=>onClose()}/>
-                {isMyPost && (<DeleteModel ariaLabel="post options"/> )}
+                {isMyPost && (<DeleteModel ariaLabel="post options" onConfirm={()=>handleDeletePost(postInfos.id)} loading={isRemoving}/> )}
             </div>
 
           <button
@@ -68,7 +95,7 @@ export default function InspectPost({ onClose,postInfos }: InspectPostProps) {
             <InspectPostSub onClose={()=>onClose()} caption={postInfos.caption || ''} postedTime={postInfos.postedTime} totalLikes={postInfos.likes.length} comments={postInfos.comments} posterInfos={{
             username: postInfos.user.username,
             avatar: postInfos.user.image,
-            }}/>
+            }} postId={postInfos.id}/>
           </div>
         </div>
       </div>

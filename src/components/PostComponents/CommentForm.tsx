@@ -9,10 +9,21 @@ import { Smile } from "lucide-react";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { Field, FieldError } from "../ui/field";
 import { useEffect, useRef, useState } from "react";
+import { createComment } from "@/lib/services/comment";
+import { Post } from "@prisma/client";
+import { userPost } from "../ProfileComponents/ProfilePosts";
+import LoadingSpinner from "../LoadingSpinner";
 
 export type CommentFormValue = z.infer<typeof commentSchema>;
 
-export default function CommentForm() {
+
+
+interface CommentFormProps{
+  postId: Post['id']
+  onCommentCreated: (newComment:userPost['comments'][number]) => void
+}
+
+export default function CommentForm({postId,onCommentCreated}:CommentFormProps) {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const closingRef = useRef<HTMLDivElement| null>(null);
     const form = useForm({
@@ -38,8 +49,17 @@ export default function CommentForm() {
 
     const onSubmit = async (value: CommentFormValue) => {
         try {
-        } catch (error) {
-        toast.error("Something went wrong, please try again");
+          const result = await createComment(postId,value);
+          if (!result.success || !result.newComment){
+            toast.error("Failed to add comment. Please try again.");
+            return;
+          }
+          toast.success('Comment added successfully');
+          onCommentCreated(result.newComment);
+          form.reset();
+        } 
+        catch (error) {
+          toast.error("Something went wrong, please try again");
         }
     };
 
@@ -120,9 +140,9 @@ export default function CommentForm() {
                     disabled={
                       !isDirty || isSubmitting || !field.value.trim()
                     }
-                    className="cursor-pointer rounded-lg bg-primary6 px-4 py-2 text-sm font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                    className={`cursor-pointer rounded-lg bg-primary6 px-4 py-2 text-sm font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center ${!isDirty ? 'opacity-80' : ''}`}
                   >
-                    {isSubmitting ? "Posting..." : "Post"}
+                    {isSubmitting ? <LoadingSpinner/> : "Post"}
                   </button>
                 </div>
               </div>

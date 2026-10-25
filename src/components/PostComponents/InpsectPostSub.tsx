@@ -6,7 +6,8 @@ import CommentForm from "./CommentForm";
 import { userPost } from "../ProfileComponents/ProfilePosts";
 import { getPostedTime } from "@/lib/utils";
 import EmptyComments from "../EmptyCallbacks/EmptyComments";
-import { User } from "@prisma/client";
+import { Comment, User } from "@prisma/client";
+import { useState } from "react";
 
 interface InspectPostSubProps{
     caption: userPost['caption']
@@ -17,10 +18,12 @@ interface InspectPostSubProps{
         username: User['username'];
         avatar: User['image']
     },
+    postId: userPost['id']
     onClose: () => void, 
 }
 
-export default function InspectPostSub({caption,postedTime,comments,totalLikes,posterInfos,onClose}:InspectPostSubProps) {
+export default function InspectPostSub({caption,postedTime,comments,totalLikes,posterInfos,onClose,postId}:InspectPostSubProps) {
+  const [createdComments,setCreatedComments] = useState<userPost['comments']>(comments);
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-primary8">
       <div className="shrink-0 border-b border-primary5 p-4">
@@ -38,15 +41,18 @@ export default function InspectPostSub({caption,postedTime,comments,totalLikes,p
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
         <div className="flex flex-col gap-5">
-          {comments.length === 0 ? <EmptyComments/> :
-          comments.map(comment => {
+          {createdComments.length === 0 ? <EmptyComments/> :
+          createdComments.map(createdComment => {
             return(
-                <InspectingComment commentInfos={comment} onClose={()=>onClose()} key={comment.id}/>
+                <InspectingComment commentInfos={createdComment} onClose={()=>onClose()} key={createdComment.id} onDeleteComment={(commentId: Comment["id"]) =>
+                  setCreatedComments((prev) =>
+                    prev.filter((comment) => comment.id !== commentId)
+                  )
+                }/>
             )
           })}
         </div>
       </div>
-
       <div className="shrink-0 border-t border-primary5 bg-primary8 p-3 sm:p-4">
         <div className="mb-3 flex items-center gap-5">
           <button
@@ -64,11 +70,13 @@ export default function InspectPostSub({caption,postedTime,comments,totalLikes,p
             className="flex items-center gap-2 text-grey1 transition-colors hover:text-primary2"
           >
             <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-sm font-medium">{comments.length} comments</span>
+            <span className="text-sm font-medium">{createdComments.length} comments</span>
           </button>
         </div>
 
-        <CommentForm />
+        <CommentForm onCommentCreated={(newComment) =>{
+          setCreatedComments(prev => [...prev,newComment])
+        }} postId={postId}/>
       </div>
     </div>
   );

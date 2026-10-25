@@ -6,17 +6,37 @@ import ProfileIcon from "../ProfileIcon";
 import { userPost } from "../ProfileComponents/ProfilePosts";
 import { getPostedTime } from "@/lib/utils";
 import DeleteModel from "../DeleteModel";
+import { toast } from "sonner";
+import { Comment } from "@prisma/client";
+import { deleteComment } from "@/lib/services/comment";
 
 
 interface InspectingCommentProps{
     commentInfos: userPost['comments'][number]
     onClose: () => void,
+    onDeleteComment: (commentId:Comment['id']) => void,
 }
 
-export default function InspectingComment({commentInfos,onClose}:InspectingCommentProps) {
-
-
-    // all u left here is to call the removeComment function by passing the comment id to it !!!
+export default function InspectingComment({commentInfos,onClose,onDeleteComment}:InspectingCommentProps) {
+    const [isRemoving,setIsRemoving] = useState<boolean>(false);
+    const handleDeleteComment = async(commentId:Comment['id']) =>{
+        try{
+            setIsRemoving(true);
+            const result = await deleteComment(commentId);
+            if (!result.success){
+                toast.error('Failed to delete comment. please try again');
+                return;
+            }
+            toast.success('Comment deleted successfully.');
+            onDeleteComment(commentInfos.id)
+        }
+        catch(error){
+            toast.error('Somthing went wrong, please try again.')
+        }
+        finally{
+            setIsRemoving(false);
+        }
+    }
     
 
     return (
@@ -33,7 +53,7 @@ export default function InspectingComment({commentInfos,onClose}:InspectingComme
             </div>
 
             <div className="relative shrink-0">
-                <DeleteModel ariaLabel="comment options"/>
+                <DeleteModel ariaLabel="comment options" onConfirm={()=>handleDeleteComment(commentInfos.id)} loading={isRemoving}/>
             </div>
         </div>
     );
