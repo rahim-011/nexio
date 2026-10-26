@@ -1,11 +1,10 @@
+
 import EmptyChat from "@/components/EmptyCallbacks/EmptyChat";
 
-
-
-export default function Messages(){
-    return(
-        <main className="flex justify-center items-center min-h-full w-full">
-            <EmptyChat/>
-        </main>
-    )
+export default function Messages() {
+    return (
+        <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center">
+            <EmptyChat />
+        </div>
+    );
 }

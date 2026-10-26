@@ -46,7 +46,6 @@ export default function InspectingComment({commentInfos,onClose,onDeleteComment}
                     <ProfileIcon username={commentInfos.user.username} avatar={commentInfos.user.image} onClose={()=>onClose()}/>
                     <span className="shrink-0 text-xs text-grey2">{getPostedTime(commentInfos.commentedTime)}</span>
                 </div>
-
                 <p className="break-words px-1 text-sm leading-5 text-grey1">
                     {commentInfos.content}
                 </p>
