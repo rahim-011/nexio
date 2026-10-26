@@ -26,7 +26,7 @@ export default function DeleteModel({ariaLabel,onConfirm,loading,ownerUsername}:
         document.addEventListener('mousedown', closeRemovingModel);
         return () => document.removeEventListener('mousedown', closeRemovingModel);
     }, [isOpen]);
-    if (cachedUserInfos.username !== ownerUsername) return null;
+    if (ownerUsername && cachedUserInfos.username !== ownerUsername) return null;
     return(
         <div className="relative shrink-0" ref={closingRef}>
             <button
