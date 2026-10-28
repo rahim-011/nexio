@@ -1,6 +1,5 @@
-import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { Resend } from "resend";
 
 export async function sendEmail({
     to,
@@ -11,6 +10,8 @@ export async function sendEmail({
     subject: string;
     html: string;
 }) {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     const { data, error } = await resend.emails.send({
         from: "Nexio <onboarding@resend.dev>",
         to,

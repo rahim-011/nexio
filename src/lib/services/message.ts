@@ -3,6 +3,7 @@
 import { Chat, Message, User } from "@prisma/client";
 import { prisma } from "../prisma";
 import { verifyUserSession } from "./verifications";
+import { getCurrentUser } from "./user";
 
 
 
@@ -59,6 +60,57 @@ export async function getAllMessagesInboxes(){
 export type messageInboxesValue = NonNullable<Awaited<
     ReturnType<typeof getAllMessagesInboxes>
 >['messagesInboxes']>[number]
+
+
+
+
+
+export async function createChatInbox(receiverId:User['id'],senderId:User['id']){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        if (userId !== senderId){
+            throw new Error('Invalid request')
+        }
+        const currentUser = await getCurrentUser(userId);
+        if (!currentUser){
+            throw new Error('User not found!')
+        }
+        const isFriend = currentUser.friendsIds.includes(receiverId);
+        if (!isFriend){
+            throw new Error('Add him to your friend list first')
+        }
+        const existingChat = await prisma.chat.findFirst({
+            where:{
+                participants:{
+                    hasEvery:[receiverId,userId]
+                }
+            }
+        })
+        if (existingChat){
+            return{
+                success:true,
+                existingChat // returning the existing chat 
+            }
+        }
+        const newChat = await prisma.chat.create({
+            data:{
+                participants:[receiverId,userId]
+            }
+        })
+        return{
+            success:true,
+            newChat
+        }
+    }
+    catch(error){
+        console.log('Failed to create new chat: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong, please try again.'
+        }
+    }
+}
 
 
 
