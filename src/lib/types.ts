@@ -1,3 +1,4 @@
+import { Chat } from "@prisma/client";
 
 
 
@@ -21,8 +22,7 @@ export type userInfos = {
 }
 
 
-export type uploadFolders = 'posts' | 'avatars'
-
+export type UploadFolders = "posts" | "avatars" | `chat/${Chat['id']}`;
 
 export type manageFriendsActions = 'accept' | 'decline'
 export type FriendStatus = 'Friends' | 'pending' | 'accept' | null;

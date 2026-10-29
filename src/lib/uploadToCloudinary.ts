@@ -1,9 +1,9 @@
 
-import { uploadFolders } from "./types";
+import { UploadFolders } from "./types";
 import { getSignature } from "./getUploadSignature";
 
 
-export const uploadToCloudinary = async (file: File,folderName:uploadFolders) => {
+export const uploadToCloudinary = async (file: File,folderName:UploadFolders) => {
     const {
         signature,
         preset,

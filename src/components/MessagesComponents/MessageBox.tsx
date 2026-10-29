@@ -3,22 +3,51 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import DeleteModel from "../DeleteModel";
+import { messageInboxesValue, removeMessageInbox } from "@/lib/services/message";
+import { getPostedTime } from "@/lib/utils";
+import { toast } from "sonner";
+import { useState } from "react";
+import { Chat } from "@prisma/client";
 
-export default function MessageBox() {
-    const isUnread = true;
+
+interface MessageBoxProps{
+    inboxInfos: messageInboxesValue
+    onDelete: (targetId:Chat['id']) => void,
+}
+
+export default function MessageBox({inboxInfos,onDelete}:MessageBoxProps) {
+    const [loading,setLoading] = useState<boolean>(false);
+    const isUnread = inboxInfos.messages[0]?.readAt === null;
     const router = useRouter();
-
+    const handleDeleteMessageBox = async () =>{
+        try{
+            setLoading(true);
+            const result = await removeMessageInbox(inboxInfos.id);
+            if (!result.success){
+                toast.error("Failed to delete conversation. Please try again");
+                return;
+            }
+            onDelete(inboxInfos.id);
+            toast.success("Conversation deleted successfully");
+        }
+        catch(error){
+            toast.error('Somthing went wrong, please try again.')
+        }
+        finally{
+            setLoading(false);
+        }
+    }
     return (
         <div
             className={`cursor-pointer group relative flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-3 transition-colors duration-200 hover:bg-primary6 ${
                 isUnread ? "bg-primary5/30" : ""
             }`}
-            onClick={() => router.push('/messages/1')}
+            onClick={() => router.push(`/messages/${inboxInfos.id}`)}
         >
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full ring-1 ring-primary5/50">
                 <Image
-                    alt="John Colaf's avatar"
-                    src="/callbackAvatar.webp"
+                    alt={`${inboxInfos.receiver?.username} avatar`}
+                    src={inboxInfos.receiver?.image || '/callbackAvatar.webp'}
                     loading="eager"
                     fill
                     sizes="48px"
@@ -34,7 +63,7 @@ export default function MessageBox() {
                             : "font-medium text-grey1"
                     }`}
                 >
-                    John Colaf
+                    {inboxInfos.receiver?.username}
                 </span>
 
                 <div className="flex min-w-0 items-center gap-2">
@@ -45,11 +74,11 @@ export default function MessageBox() {
                                 : "text-grey3"
                         }`}
                     >
-                        You: Hello
+                        {inboxInfos.messages[0]?.sender.username !== inboxInfos.receiver?.username ? 'You' : ''}: {inboxInfos.messages[0]?.content}
                     </span>
 
                     <span className="shrink-0 text-[11px] text-grey3">
-                        2d
+                        {inboxInfos.messages[0] ? getPostedTime(inboxInfos.messages[0]?.createdAt) : '' }
                     </span>
                 </div>
             </div>
@@ -66,9 +95,9 @@ export default function MessageBox() {
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DeleteModel
-                        loading={false}
+                        loading={loading}
                         ariaLabel="message inbox options"
-                        onConfirm={() => undefined}
+                        onConfirm={() => handleDeleteMessageBox()}
                     />
                 </div>
             </div>

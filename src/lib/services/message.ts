@@ -4,6 +4,8 @@ import { Chat, Message, User } from "@prisma/client";
 import { prisma } from "../prisma";
 import { verifyUserSession } from "./verifications";
 import { getCurrentUser } from "./user";
+import { MessageFormValue } from "@/components/MessagesComponents/MessageSubFooter";
+import { messageSchema } from "@/schemas/chatSchema";
 
 
 
@@ -38,13 +40,48 @@ export async function getAllMessagesInboxes(){
                 messages:{
                     orderBy: {createdAt:'desc'},
                     take: 1,
+                    select:{
+                        content:true,
+                        id:true,
+                        chatId:true,
+                        createdAt:true,
+                        readAt:true,
+                        sender:{
+                            select:{
+                                username:true
+                            }
+                        }
+                    }
                 }
             }
         })
+        const formattedInboxes = await Promise.all(
+        messagesInboxes.map(async (item) => {
+        const receiverId = item.participants.find(id => id !== userId);
+
+            if (!receiverId) return null;
+
+            const receiver = await getCurrentUser(receiverId);
+
+            return {
+                ...item,
+                receiver: receiver
+                    ? {
+                        id: receiver.id,
+                        name: receiver.name,
+                        username: receiver.username,
+                        image: receiver.image,
+                    }
+                    : null,
+            };
+        })
+    );
+
+    const validInboxes = formattedInboxes.filter(item => item !== null);
         return{
             success:true,
             message:'The message inboxes are feteched successfully.',
-            messagesInboxes
+            messagesInboxes:validInboxes
         }
 
     }
@@ -65,13 +102,10 @@ export type messageInboxesValue = NonNullable<Awaited<
 
 
 
-export async function createChatInbox(receiverId:User['id'],senderId:User['id']){
+export async function createChatInbox(receiverId:User['id']){
     try{
         const session = await verifyUserSession();
         const userId = session.user.id;
-        if (userId !== senderId){
-            throw new Error('Invalid request')
-        }
         const currentUser = await getCurrentUser(userId);
         if (!currentUser){
             throw new Error('User not found!')
@@ -90,7 +124,7 @@ export async function createChatInbox(receiverId:User['id'],senderId:User['id'])
         if (existingChat){
             return{
                 success:true,
-                existingChat // returning the existing chat 
+                chat:existingChat // returning the existing chat 
             }
         }
         const newChat = await prisma.chat.create({
@@ -100,7 +134,7 @@ export async function createChatInbox(receiverId:User['id'],senderId:User['id'])
         })
         return{
             success:true,
-            newChat
+            chat:newChat
         }
     }
     catch(error){
@@ -190,4 +224,129 @@ export async function deleteMessage(messageId:Message['id']){
     }
 }
 
+export async  function isOnline(userId:User['id']){
+    try{
+        const response = await fetch(`${process.env.SOCKET_SERVER_URL}/users/${userId}/status`,
+            {cache:'no-store',
+                headers:{
+                    "x-internal-secret": process.env.INTERNAL_API_SECRET!
+                }
+            },
+        );
+        if (!response.ok){
+             const errorText = await response.text();
 
+    console.error("User status request failed:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+    });
+            throw new Error('Failed to get user status')
+        }
+        const {isOnline} = await response.json();
+        return isOnline
+    }
+    catch(error){
+        console.log("Failed to get user status",error);
+        return{
+            success:false,
+            error:'Somthing went wrong ,please try again'
+        }
+    }
+}
+
+export const getReceiverChatInfos = async(chatId:Chat['id']) =>{
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const existingChat = await prisma.chat.findUnique({
+            where:{
+                id:chatId
+            }
+        })
+        if (!existingChat){
+            throw new Error('Chat does not exist!')
+        }
+        const receiverId = existingChat.participants.find(id => id != userId);
+        if (!receiverId){
+            throw new Error('Receiver id does not exist!')
+        }
+        const receiver = await getCurrentUser(receiverId);
+        if (!receiver){
+            throw new Error('Receiver does not exist!')
+        }
+        const isReceiverOnline = await isOnline(receiverId);
+        const receiverInfos = {
+            ...receiver,
+            isOnline: isReceiverOnline
+        }
+        return{
+            success:true,
+            message:'User infos are fetched successfully!',
+            receiverInfos
+        }
+    }
+    catch(error){
+        console.log('Failed to get receiver chat infos: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong,please try again.'
+        }
+    }
+}
+
+export type receiverInfosValue = Awaited<
+    ReturnType<typeof getReceiverChatInfos>
+>['receiverInfos']
+
+
+
+
+
+export async function createNewMessage(values:MessageFormValue){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const validation = messageSchema.safeParse(values);
+        if (!validation.success){
+            throw new Error('Invalid form data!')
+        }
+        const {media,content,chatId} = validation.data;
+        const existingChat = await prisma.chat.findUnique({
+            where:{
+                id: chatId,
+            }
+        })
+        if (!existingChat){
+            throw new Error('Invalid request');
+        }
+        const newMessage = await prisma.message.create({
+            data:{
+                content,
+                images: media.map(mediaItem => ({
+                    publicId: mediaItem.publicId,
+                    resourceType: mediaItem.resourceType,
+                    url: mediaItem.url
+                })),
+                chatId,
+                senderId:userId
+            }
+        })
+        return{
+            success:true,
+            message:'Message has been created successfully!',
+            newMessage
+        }
+    }
+    catch(error){
+        console.log("Failed to send message: ",error);
+        return{
+            success:false,
+            error:'Somthing went wrong, please try again.'
+        }
+    }
+}
+
+export type newMessageValue = Awaited<
+    ReturnType<typeof createNewMessage>
+>['newMessage']

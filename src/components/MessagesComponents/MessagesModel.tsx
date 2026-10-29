@@ -3,15 +3,23 @@
 import { useUserStore } from "@/lib/store/userStore";
 import Link from "next/link";
 import MessageBox from "./MessageBox";
+import { messageInboxesValue } from "@/lib/services/message";
+import EmptyChatInboxes from "../EmptyCallbacks/EmptyChatInboxes";
+import { Chat } from "@prisma/client";
+
 
 
 interface MessageModelProps{
     onClose: () => void,
+    inboxes: messageInboxesValue[]
+    onDelete: (targetId:Chat['id']) => void,
 }
 
-export default function MessagesModel({onClose}:MessageModelProps) {
+export default function MessagesModel({onClose,inboxes,onDelete}:MessageModelProps) {
+
     const { cachedUserInfos } = useUserStore();
     const { username } = cachedUserInfos;
+    
 
     return (
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-primary7">
@@ -38,7 +46,11 @@ export default function MessagesModel({onClose}:MessageModelProps) {
 
                 <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4 pt-4 md:px-3 md:pt-0">
                     <div className="flex flex-col items-center gap-1 md:items-stretch">
-                        <MessageBox />
+                        {inboxes.length === 0 ? (<EmptyChatInboxes/>) : (inboxes.map(inbox => {
+                            return(
+                                <MessageBox key={inbox.id} inboxInfos={inbox} onDelete={onDelete}/>
+                            )
+                        }))}
                     </div>
                 </div>
             </div>

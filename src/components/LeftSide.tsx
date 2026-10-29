@@ -13,12 +13,18 @@ import { authClient } from "@/lib/auth-client";
 import { userInfos } from "@/lib/types";
 import { useUserStore } from "@/lib/store/userStore";
 import MessagesModel from "./MessagesComponents/MessagesModel";
+import { getAllMessagesInboxes, messageInboxesValue } from "@/lib/services/message";
+import { Chat } from "@prisma/client";
+import { useSocket } from "@/hooks/useSocket";
 
 interface LeftSideProps {
     userInfos: userInfos | null
 }
 
 export default function LeftSide({ userInfos }: LeftSideProps) {
+    useSocket(); // start the socket connection!
+
+
     const { setUserInfos, cachedUserInfos } = useUserStore();
     const { username } = cachedUserInfos;
     const router = useRouter();
@@ -30,6 +36,8 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
     const [isHovered, setIsHovered] = useState(false);
     const [isSmall, setIsSmall] = useState(false);
 
+
+    const [inboxes,setInboxes] = useState<messageInboxesValue[]>([]);
     const expanded = isHovered;
 
     const closeModel = useRef<HTMLDivElement | null>(null);
@@ -71,6 +79,22 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
             document.body.style.transition = '';
         };
     }, []);
+    useEffect(()=>{
+        async function fetchInboxes(){
+            try{
+                const res = await getAllMessagesInboxes();
+                if (!res.success || !res.messagesInboxes){
+                    toast.error('Failed to fetch messages inboxes');
+                    return;
+                }
+                setInboxes(res.messagesInboxes);
+            }
+            catch(error){
+                toast.error('Somthing went wrong, please try again.')
+            }
+        }
+        fetchInboxes();
+    },[inboxes.length,pathname])
 
     const navLinks = [
         { label: 'Search', icon: <Search size={22} className="shrink-0" />, path: '/search' },
@@ -277,7 +301,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
 
             {showPanel && (
                 <div className={`fixed bottom-0 top-0 z-30 w-[76px] overflow-hidden border-r border-primary5/50 bg-primary7 shadow-2xl transition-[left,width] duration-300 ease-in-out md:w-[360px] ${expanded ? 'left-64' : 'left-[76px]'}`}>
-                    <MessagesModel onClose={() => setIsMessageModelOpen(false)} />
+                    <MessagesModel onClose={() => setIsMessageModelOpen(false)} inboxes={inboxes} onDelete={(targetId:Chat['id'])=>setInboxes(prev => prev.filter(item => item.id != targetId))}/>
                 </div>
             )}
         </>

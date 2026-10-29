@@ -15,6 +15,10 @@ import { useRouter } from "next/navigation";
 import ConfirmModel from "../ConfirmModel";
 import { cancelFriendRequest, sendFriendRequest } from "@/lib/services/request";
 import LoadingSpinner from "../LoadingSpinner";
+import { createChatInbox } from "@/lib/services/message";
+import { socket, verifyConnection } from "@/lib/socket";
+import { JoinChatResponse } from "@/socket-server";
+import { useSocket } from "@/hooks/useSocket";
 
 interface ProfileTitleProps {
     name: string | null;
@@ -32,7 +36,10 @@ export default function ProfileTitle({
 }: {
     userInfos: ProfileTitleProps;
 }) {
+    useSocket();// start the socket connection
+
     const [isOpen, setIsOpen] = useState(false);
+    const [isCreating,setIsCreating] = useState<boolean>(false);
     const [isSending,setIsSending] = useState<boolean>(false);
     const [isCancelling,setIsCancelling] = useState<boolean>(false);
     const [btnStatus,setBtnStatus] = useState<ProfileLabels>(userInfos.profileLabel);
@@ -109,6 +116,32 @@ export default function ProfileTitle({
         }
     }
 
+    const handleCreateChat = async() =>{
+        try{
+            setIsCreating(true);
+            const result = await createChatInbox(userInfos.userId);
+            if (!result.success){
+                toast.error("Failed to open conversation. Please try again.");
+                return;
+            }
+            const chatId = result.chat?.id;
+            await verifyConnection();
+            socket.emit("chat:join",chatId, ((response:JoinChatResponse) => {
+                console.log(response)
+                if (!response.success){
+                    toast.error('Failed to join conversation!,please try again.');
+                    return;
+                }
+                router.push(`/messages/${chatId}`);
+            }))
+        }
+        catch(error){
+            toast.error('Somthing went wrong, please try again.')
+        }
+        finally{
+            setIsCreating(false);
+        }
+    }
     return (
         <div className="flex flex-col gap-4 rounded-xl border border-white/5 bg-primary9 p-5">
             <div className="flex items-center gap-5">
@@ -183,11 +216,13 @@ export default function ProfileTitle({
 
                     <button
                         type="button"
-                        className="rounded-xl border border-white/10 bg-primary7 px-5 py-3 text-sm font-semibold text-grey1 transition hover:bg-primary6 sm:text-base cursor-pointer"
+                        onClick={()=>handleCreateChat()}
+                        className={`flex items-center justify-center ${isCreating ? 'opacity-80' : ''} rounded-xl border border-white/10 bg-primary7 px-5 py-3 text-sm font-semibold text-grey1 transition hover:bg-primary6 sm:text-base cursor-pointer`}
+                        
                     >
-                        Message
+                        {isCreating ? <LoadingSpinner/> : 'Message'}
                     </button>
-                    {isConfirmOpen && <ConfirmModel sub={"Are you sure you want to remove this friend? You won't be able to see them in your friends list anymore"} title={"Remove Friend"} isLoading={isRemoving} onClose={()=>setIsOpen(false)} onConfirm={()=>handleRemoveFriend(userInfos.userId)}/>}
+                    {isConfirmOpen && <ConfirmModel sub={"Are you sure you want to remove this friend? You won't be able to see them in your friends list anymore"} title={"Remove Friend"} isLoading={isRemoving} onClose={()=>setIsConfirmOpen(false)} onConfirm={()=>handleRemoveFriend(userInfos.userId)}/>}
                 </div>
             )}
 
