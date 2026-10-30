@@ -1,35 +1,107 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import MessageBubble from "./MessageBubble";
-import { MessageFormValue, SelectedImage } from "./MessageSubFooter";
 import { socket } from "@/lib/socket";
 import { getPostedTime } from "@/lib/utils";
-import { newMessageValue } from "@/lib/services/message";
+import { getPreviousMessages, newMessageValue } from "@/lib/services/message";
+import { DisplayMessage } from "./MessageSub";
+import { Chat } from "@prisma/client";
+import LoadingSpinner from "../LoadingSpinner";
 
+interface MessageSubMainProps {
+    messages: DisplayMessage[];
+    setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
+    chatId: Chat["id"];
+    containerRef:  React.RefObject<HTMLDivElement | null>;
+}
 
+export default function MessageSubMain({
+    messages,
+    setMessages,
+    chatId,
+    containerRef
+}: MessageSubMainProps) {
+    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+    const [hasMore, setHasMore] = useState<boolean>(false);
 
+    useEffect(() => {
+        const handleNewMessages = (newMessage: newMessageValue) => {
+            setMessages(prev =>
+                prev.some(message => message.id === newMessage.id)
+                    ? prev
+                    : [...prev, { ...newMessage, status: "sent" }]
+            );
+        };
 
+        socket.on("message:new", handleNewMessages);
 
-export default function MessageSubMain(){
-    const [messages,setMessages] = useState<newMessageValue[]>([]);
-    useEffect(()=>{
-        const handleNewMessages = (newMessage:newMessageValue) =>{
-            setMessages(prev => [...prev,newMessage]);
+        return () => {
+            socket.off("message:new", handleNewMessages);
+        };
+    }, [setMessages]);
+
+    const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollTop } = e.currentTarget;
+
+        if (scrollTop === 0 && !isLoadingMore && messages.length > 0 && hasMore) {
+            setIsLoadingMore(true);
+            const currentCursor = messages[0].createdAt;
+
+            try {
+                const result = await getPreviousMessages(chatId, currentCursor);
+
+                if (!result.success || !result.loadedMessages) {
+                    console.log("Failed to load previous messages!");
+                    return;
+                }
+
+                if (result.loadedMessages.length === 0) {
+                    setHasMore(false);
+                }
+
+                setMessages(prev => [...result.loadedMessages, ...prev]);
+            } catch (error) {
+                console.log("Something went wrong, please try again.");
+            } finally {
+                setIsLoadingMore(false);
+            }
         }
-        socket.on("message:new",handleNewMessages);
-        return () =>{
-            socket.off("message:new",handleNewMessages)
-        }
-    },[socket])
-    return(
-        <div className="flex items-center justify-center">
+    };
+
+    
+    return (
+        <div
+            className="flex flex-col gap-3 p-4 overflow-y-auto min-h-0 h-full"
+            onScroll={handleScroll}
+            ref={containerRef}
+        >
+            {isLoadingMore && (
+                <div className="flex w-full justify-center py-2">
+                    <LoadingSpinner />
+                </div>
+            )}
+
             {messages.map(message => {
-                return(
-                    <MessageBubble isMine={true} time={message?.createdAt ? getPostedTime(message?.createdAt) : '' } media={message?.images} key={message?.chatId} content={message?.content}/>
-                )
+                if (!message) return null;
+
+                return (
+                    <MessageBubble
+                        key={message.id}
+                        readAt={message.readAt}
+                        messageId={message.id}
+                        onDelete={() =>
+                            setMessages(prev =>
+                                prev.filter(prevMessage => prevMessage.id !== message.id)
+                            )
+                        }
+                        isMine={message.isMine}
+                        createdTime={message.createdAt ? getPostedTime(message.createdAt) : ""}
+                        media={message.images}
+                        content={message.content}
+                    />
+                );
             })}
         </div>
-        // u have the bubble infos just build the bubble that receive it and show it ??  (the images separatly then content and the isMIne logique !!)
-    )
+    );
 }

@@ -48,7 +48,8 @@ export async function getAllMessagesInboxes(){
                         readAt:true,
                         sender:{
                             select:{
-                                username:true
+                                username:true,
+                                id:true
                             }
                         }
                     }
@@ -65,6 +66,8 @@ export async function getAllMessagesInboxes(){
 
             return {
                 ...item,
+                isUnread: item.messages.length > 0 && userId !== item.messages[0].sender.id &&
+                item.messages[0].readAt === null,
                 receiver: receiver
                     ? {
                         id: receiver.id,
@@ -278,6 +281,7 @@ export const getReceiverChatInfos = async(chatId:Chat['id']) =>{
         const isReceiverOnline = await isOnline(receiverId);
         const receiverInfos = {
             ...receiver,
+            currentUserId:userId,
             isOnline: isReceiverOnline
         }
         return{
@@ -329,17 +333,63 @@ export async function createNewMessage(values:MessageFormValue){
                     url: mediaItem.url
                 })),
                 chatId,
-                senderId:userId
+                senderId:userId,
             }
         })
+        const isMine = userId === newMessage.senderId;
         return{
-            success:true,
+            success:true as const,
             message:'Message has been created successfully!',
-            newMessage
+            newMessage: {...newMessage,isMine}
         }
     }
     catch(error){
         console.log("Failed to send message: ",error);
+        return{
+            success:false as const,
+            error:'Somthing went wrong, please try again.'
+        }
+    }
+}
+
+export type newMessageValue = NonNullable<
+    Extract<
+        Awaited<ReturnType<typeof createNewMessage>>,
+        { success: true }
+    >["newMessage"]
+>;
+
+
+
+export async function updateChatInbox(chatId:Chat['id']){
+    try{
+        await verifyUserSession();
+        const existingChat = await prisma.chat.findUnique({
+            where:{
+                id:chatId
+            },
+            select:{
+                messages:{orderBy:{createdAt:'desc'},take:1}
+            }
+        })
+        if (!existingChat){
+            throw new Error('Invalid request!')
+        };
+        await prisma.message.update({
+            where:{
+                id: existingChat.messages[0].id
+            },
+            data:{
+                readAt: new Date()
+            }
+        })
+        return{
+            success:true,
+            message:'Chat inbox status has been updated successfully!'
+        }
+    }
+    catch(error){
+        console.log('Failed to update chat inbox: ',error);
         return{
             success:false,
             error:'Somthing went wrong, please try again.'
@@ -347,6 +397,94 @@ export async function createNewMessage(values:MessageFormValue){
     }
 }
 
-export type newMessageValue = Awaited<
-    ReturnType<typeof createNewMessage>
->['newMessage']
+
+
+export async function getPreviousMessages(chatId:Chat['id'],cursor:Date){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const existingChat = await prisma.chat.findUnique({
+            where:{
+                id:chatId
+            }
+        });
+        if (!existingChat){
+            throw new Error('Invalid request');
+        }
+        if (!existingChat.participants.includes(userId)){
+            throw new Error('Access denied')
+        }
+        const limit = 20;
+        const loadedMessages = await prisma.message.findMany({
+            where:{
+                chatId,
+                createdAt:{
+                    lt: cursor,
+                },
+            },
+            orderBy:{
+                createdAt: "desc"
+            },
+            take:limit
+        })
+        const formattedMessages = loadedMessages.map(message => ({
+            ...message,
+            isMine: message.senderId === userId,
+            status: 'sent' as const
+        }))
+        return{
+            success:true,
+            loadedMessages: formattedMessages,
+        }
+    }
+    catch(error){
+        console.log('Failed to get chat messages: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong,please try again'
+        }
+    }
+}
+export async function getLatestMessages(chatId:Chat['id']){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const existingChat = await prisma.chat.findUnique({
+            where:{
+                id:chatId
+            }
+        });
+        if (!existingChat){
+            throw new Error('Invalid request');
+        }
+        if (!existingChat.participants.includes(userId)){
+            throw new Error('Access denied')
+        }
+        const limit = 20;
+        const latestMessages = await prisma.message.findMany({
+            where:{
+                chatId,
+            },
+            orderBy:{
+                createdAt: "desc"
+            },
+            take: limit
+        })
+        const formattedMessages = latestMessages.map(message => ({
+            ...message,
+            isMine: message.senderId === userId,
+            status: 'sent' as const
+        }))
+        return{
+            success:true,
+            latestMessages: formattedMessages,
+        }
+    }
+    catch(error){
+        console.log('Failed to get chat messages: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong,please try again'
+        }
+    }
+}

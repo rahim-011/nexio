@@ -7,11 +7,17 @@ dotenv.config({ path: ".env" });
 
 import { auth } from "./lib/auth";
 import { prisma } from "./lib/prisma";
-import { messageSchema } from "./schemas/chatSchema";
-import { Message, User } from "@prisma/client";
-import { MessageFormValue } from "./components/MessagesComponents/MessageSubFooter";
+import type { newMessageValue } from "@/lib/services/message";import { Chat, Message, User } from "@prisma/client";
 
 
+
+interface ClientToServerEvents {
+    "message:send": (data: Message) => void;
+}
+
+interface ServerToClientEvents {
+    "message:new": (data: Message) => void;
+}
 // response types
 export type JoinChatResponse = {
     success: boolean;
@@ -117,14 +123,14 @@ io.on("connection", (socket) => {
             console.log('Failed to join chat: ',error);
         }
     })
+    socket.on("chat:leave",(chatId:Chat['id']) => {
+        socket.leave(chatId)
+    })
 
     //front send a a message and the sever receive it then send it again to the chat room;
-    socket.on("message:send",(data:Message,ack) =>{
-        io.to(data.chatId).emit("message:new",{
-            content:  data.content,
-            media: data.images
-        })
-    })
+    socket.on("message:send", (data: newMessageValue) => {
+        io.to(data.chatId).emit("message:new", data);
+    });
 
     // we did user the io. cause its a message that can be sent to all users in that chat (deffrent sockets not just this socket that we are already in with the connection event)
 });

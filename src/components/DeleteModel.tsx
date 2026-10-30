@@ -9,7 +9,7 @@ import { User } from "@prisma/client";
 interface DeleteModelProps{
     ariaLabel: string
     onConfirm: () =>void
-    loading : boolean
+    loading? : boolean
     ownerUsername?: User['username']
 }
 

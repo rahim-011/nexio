@@ -13,9 +13,10 @@ export default async function MainLayout({
         <div className="min-h-screen bg-primary7">
             <LeftSide userInfos={userInfos} />
 
-            <div className="ml-[76px] min-w-0 bg-primary7 transition-[margin] duration-300 ease-in-out peer-hover:ml-64">
+            <div className="ml-[76px] min-h-screen min-w-0 bg-primary7">
                 <NavBar />
-                <main className="min-h-full w-full min-w-0">
+
+                <main className="min-h-[calc(100dvh-64px)] w-full min-w-0">
                     {children}
                 </main>
             </div>
