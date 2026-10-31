@@ -6,13 +6,14 @@ import { socket } from "@/lib/socket";
 import { getPostedTime } from "@/lib/utils";
 import { getPreviousMessages, newMessageValue } from "@/lib/services/message";
 import { DisplayMessage } from "./MessageSub";
-import { Chat } from "@prisma/client";
+import { Chat, User } from "@prisma/client";
 import LoadingSpinner from "../LoadingSpinner";
 
 interface MessageSubMainProps {
     messages: DisplayMessage[];
     setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
     chatId: Chat["id"];
+    currentUserId: User['id'],
     containerRef:  React.RefObject<HTMLDivElement | null>;
 }
 
@@ -20,7 +21,8 @@ export default function MessageSubMain({
     messages,
     setMessages,
     chatId,
-    containerRef
+    containerRef,
+    currentUserId
 }: MessageSubMainProps) {
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
     const [hasMore, setHasMore] = useState<boolean>(false);
@@ -30,7 +32,7 @@ export default function MessageSubMain({
             setMessages(prev =>
                 prev.some(message => message.id === newMessage.id)
                     ? prev
-                    : [...prev, { ...newMessage, status: "sent" }]
+                    : [...prev, { ...newMessage, status: "sent" ,isMine: newMessage.senderId === currentUserId}]
             );
         };
 
@@ -55,7 +57,7 @@ export default function MessageSubMain({
                     console.log("Failed to load previous messages!");
                     return;
                 }
-
+                
                 if (result.loadedMessages.length === 0) {
                     setHasMore(false);
                 }
@@ -72,7 +74,7 @@ export default function MessageSubMain({
     
     return (
         <div
-            className="flex flex-col gap-3 p-4 overflow-y-auto min-h-0 h-full"
+            className="flex min-h-0 h-full flex-col gap-2 overflow-y-auto px-2 py-3 sm:gap-3 sm:p-4"
             onScroll={handleScroll}
             ref={containerRef}
         >
@@ -95,7 +97,7 @@ export default function MessageSubMain({
                                 prev.filter(prevMessage => prevMessage.id !== message.id)
                             )
                         }
-                        isMine={message.isMine}
+                        isMine={currentUserId === message.senderId}
                         createdTime={message.createdAt ? getPostedTime(message.createdAt) : ""}
                         media={message.images}
                         content={message.content}

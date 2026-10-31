@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useUserStore } from "@/lib/store/userStore";
@@ -30,7 +29,7 @@ export default function ProfileIcon({
         <button
             type="button"
             title={!expanded ? finalUsername : undefined}
-            className={`flex min-w-0 items-center overflow-hidden text-left ${expanded ? 'flex-1 gap-2' : 'w-10 shrink-0 justify-center'}`}
+            className={`flex min-w-0 items-center overflow-hidden text-left ${expanded ? 'flex-1 gap-2' : 'w-9 shrink-0 justify-center'}`}
             onClick={() => {
                 onClose?.();
                 router.push(`/profile/${finalUsername}`);
@@ -40,12 +39,12 @@ export default function ProfileIcon({
                 alt="user logo"
                 width={35}
                 height={35}
-                className="h-[35px] w-[35px] shrink-0 rounded-full object-cover"
+                className="h-8 w-8 shrink-0 rounded-full object-cover sm:h-[35px] sm:w-[35px]"
                 unoptimized
                 loading="eager"
                 src={finalAvatar || '/callbackAvatar.webp'}
             />
-            <span className={`min-w-0 truncate text-[0.9rem] text-grey1 ${expanded ? 'block' : 'hidden'}`}>
+            <span className={`min-w-0 truncate text-xs text-grey1 sm:text-[0.9rem] ${expanded ? 'block' : 'hidden'}`}>
                 {finalUsername}
             </span>
         </button>

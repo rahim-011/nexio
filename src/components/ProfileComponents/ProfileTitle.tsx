@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -17,7 +16,7 @@ import { cancelFriendRequest, sendFriendRequest } from "@/lib/services/request";
 import LoadingSpinner from "../LoadingSpinner";
 import { createChatInbox } from "@/lib/services/message";
 import { socket, verifyConnection } from "@/lib/socket";
-import { JoinChatResponse } from "@/socket-server";
+import { JoinChatResponse } from "../../../socket-server";
 import { useSocket } from "@/hooks/useSocket";
 
 interface ProfileTitleProps {
@@ -36,18 +35,19 @@ export default function ProfileTitle({
 }: {
     userInfos: ProfileTitleProps;
 }) {
-    useSocket();// start the socket connection
+    useSocket();
 
     const [isOpen, setIsOpen] = useState(false);
-    const [isCreating,setIsCreating] = useState<boolean>(false);
-    const [isSending,setIsSending] = useState<boolean>(false);
-    const [isCancelling,setIsCancelling] = useState<boolean>(false);
-    const [btnStatus,setBtnStatus] = useState<ProfileLabels>(userInfos.profileLabel);
+    const [isCreating, setIsCreating] = useState<boolean>(false);
+    const [isSending, setIsSending] = useState<boolean>(false);
+    const [isCancelling, setIsCancelling] = useState<boolean>(false);
+    const [btnStatus, setBtnStatus] = useState<ProfileLabels>(userInfos.profileLabel);
     const { cachedUserInfos } = useUserStore();
     const isMyProfile = cachedUserInfos.username === userInfos.username;
-    const [isRemoving,setIsRemoving] = useState<boolean>(false);
-    const [isConfirmOpen,setIsConfirmOpen] = useState<boolean>(false);
+    const [isRemoving, setIsRemoving] = useState<boolean>(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
     const router = useRouter();
+
     const profileLabelStyling: Record<ProfileLabels, string> = {
         "Edit Profile":
             "border border-sky-400/25 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 hover:text-sky-200",
@@ -62,97 +62,107 @@ export default function ProfileTitle({
             "border border-violet-400/20 bg-violet-500/10 text-violet-300/80 hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
     };
 
-    const handleRemoveFriend = async(friendId:User['id']) =>{
-        try{
+    const handleRemoveFriend = async (friendId: User["id"]) => {
+        try {
             setIsRemoving(true);
             const result = await removeFriend(friendId);
-            if(!result.success){
-                toast.error('Failed to remove friend');
-                return;
-            } 
-            toast.success('Friend has been removed successfully');
-            setIsConfirmOpen(false);
-            setBtnStatus('Add Friend');
-            router.refresh();
-        }
-        catch(error){
-            toast.error('Something went wrong, please try again.');
-        }
-    }
-    const handleSendingRequest = async(friendId:User['id']) =>{
-        try{
-            setIsSending(true);
-            const result = await sendFriendRequest(friendId);
-            if (!result.success){
-                toast.error('Failed to send friend request.');
+
+            if (!result.success) {
+                toast.error("Failed to remove friend");
                 return;
             }
-            toast.success('Friend request has been send successfully.');setBtnStatus('Pending');
-            router.refresh();
-        }
-        catch(error){
-            toast.error('Somthing went wrong, please try again.');
-        }
-        finally{
-            setIsSending(false);
-        }
-    }
-    const handleCancelingRequest = async(receiverId:User['id'])=>{
-        try{
-            setIsCancelling(true);
-            const result = await cancelFriendRequest(receiverId);
-            if (!result.success) {
-                    toast.error("Failed to cancel the friend request.");
-                    return;
-                }
+
+            toast.success("Friend has been removed successfully");
+            setIsConfirmOpen(false);
             setBtnStatus("Add Friend");
-            toast.success("Friend request cancelled");
-        }
-        catch(error){
+            router.refresh();
+        } catch (error) {
             toast.error("Something went wrong, please try again.");
         }
-        finally{
+    };
+
+    const handleSendingRequest = async (friendId: User["id"]) => {
+        try {
+            setIsSending(true);
+            const result = await sendFriendRequest(friendId);
+
+            if (!result.success) {
+                toast.error("Failed to send friend request.");
+                return;
+            }
+
+            toast.success("Friend request has been send successfully.");
+            setBtnStatus("Pending");
+            router.refresh();
+        } catch (error) {
+            toast.error("Somthing went wrong, please try again.");
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    const handleCancelingRequest = async (receiverId: User["id"]) => {
+        try {
+            setIsCancelling(true);
+            const result = await cancelFriendRequest(receiverId);
+
+            if (!result.success) {
+                toast.error("Failed to cancel the friend request.");
+                return;
+            }
+
+            setBtnStatus("Add Friend");
+            toast.success("Friend request cancelled");
+        } catch (error) {
+            toast.error("Something went wrong, please try again.");
+        } finally {
             setIsCancelling(false);
         }
-    }
+    };
 
-    const handleCreateChat = async() =>{
-        try{
+    const handleCreateChat = async () => {
+        try {
             setIsCreating(true);
             const result = await createChatInbox(userInfos.userId);
-            if (!result.success){
+
+            if (!result.success) {
                 toast.error("Failed to open conversation. Please try again.");
                 return;
             }
+
             const chatId = result.chat?.id;
             await verifyConnection();
-            socket.emit("chat:join",chatId, ((response:JoinChatResponse) => {
-                console.log(response)
-                if (!response.success){
-                    toast.error('Failed to join conversation!,please try again.');
+
+            socket.emit("chat:join", chatId, ((response: JoinChatResponse) => {
+                console.log(response);
+
+                if (!response.success) {
+                    toast.error("Failed to join conversation!,please try again.");
                     return;
                 }
+
                 router.push(`/messages/${chatId}`);
-            }))
-        }
-        catch(error){
-            toast.error('Somthing went wrong, please try again.')
-        }
-        finally{
+            }));
+        } catch (error) {
+            toast.error("Somthing went wrong, please try again.");
+        } finally {
             setIsCreating(false);
         }
-    }
+    };
+
     return (
-        <div className="flex flex-col gap-4 rounded-xl border border-white/5 bg-primary9 p-5">
-            <div className="flex items-center gap-5">
+        <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-white/5 bg-primary9 p-3 sm:gap-4 sm:p-5">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-5">
                 {isMyProfile ? (
-                    <ChangePfp />
+                    <div className="shrink-0">
+                        <ChangePfp />
+                    </div>
                 ) : (
-                    <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary7 ring-2 ring-primary5/40 sm:h-32 sm:w-32">
+                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary7 ring-2 ring-primary5/40 sm:h-32 sm:w-32">
                         <Image
                             alt={`${userInfos.username}'s profile picture`}
                             fill
-                            sizes="(max-width: 640px) 96px, 128px"
+                            sizes="(max-width: 640px) 56px, 128px"
                             loading="eager"
                             className="rounded-full object-cover"
                             unoptimized
@@ -161,20 +171,22 @@ export default function ProfileTitle({
                     </div>
                 )}
 
-                <div className="flex min-w-0 flex-col justify-center gap-1 text-grey1">
+                <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 text-grey1">
                     <div className="flex min-w-0 flex-col">
-                        <h3 className="truncate text-xl font-semibold sm:text-2xl">
+                        <h3 className="truncate text-base font-semibold sm:text-2xl">
                             {userInfos.username}
                         </h3>
+
                         {userInfos.name && (
-                            <span className="truncate text-sm text-grey1/70 sm:text-base">
+                            <span className="truncate text-[11px] text-grey1/70 sm:text-base">
                                 {userInfos.name}
                             </span>
                         )}
                     </div>
 
-                    <div className="flex items-center gap-3 text-sm sm:text-base">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] sm:text-base">
                         <span>{userInfos.totalPosts} posts</span>
+
                         <button
                             type="button"
                             onClick={() => setIsOpen(true)}
@@ -185,7 +197,7 @@ export default function ProfileTitle({
                     </div>
 
                     {userInfos.bio && (
-                        <p className="line-clamp-2 break-words text-sm sm:text-base">
+                        <p className="line-clamp-2 break-words text-[11px] sm:text-base">
                             {userInfos.bio}
                         </p>
                     )}
@@ -195,38 +207,51 @@ export default function ProfileTitle({
             {isMyProfile ? (
                 <Link
                     href="/settings/edit-profile"
-                    className={`flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition sm:w-1/2 sm:text-base ${profileLabelStyling["Edit Profile"]}`}
+                    className={`flex w-full items-center justify-center rounded-xl px-4 py-2 text-xs font-semibold transition sm:w-1/2 sm:py-3 sm:text-base ${profileLabelStyling["Edit Profile"]}`}
                 >
                     Edit Profile
                 </Link>
             ) : (
-                <div className="flex w-full flex-wrap gap-3">
+                <div className="flex w-full min-w-0 flex-wrap gap-2 sm:gap-3">
                     <button
-                        onClick={btnStatus === 'Remove Friend' ? ()=>setIsConfirmOpen(true) : btnStatus === 'Add Friend' ? () => handleSendingRequest(userInfos.userId) : (btnStatus !== 'Edit Profile' && btnStatus === 'Pending') ? ()=>handleCancelingRequest(userInfos.userId) :  undefined}
+                        onClick={btnStatus === "Remove Friend" ? () => setIsConfirmOpen(true) : btnStatus === "Add Friend" ? () => handleSendingRequest(userInfos.userId) : (btnStatus !== "Edit Profile" && btnStatus === "Pending") ? () => handleCancelingRequest(userInfos.userId) : undefined}
                         type="button"
                         disabled={
                             btnStatus === "Edit Profile" ||
                             isSending ||
                             isCancelling
                         }
-                        className={`flex items-center justify-center ${isSending ? 'opacity-80' : ''} flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition sm:flex-none sm:min-w-40 sm:text-base cursor-pointer ${profileLabelStyling[btnStatus]}`}
+                        className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center rounded-xl px-2.5 py-2 text-[11px] font-semibold transition sm:min-w-40 sm:flex-none sm:px-5 sm:py-3 sm:text-base ${isSending ? "opacity-80" : ""} ${profileLabelStyling[btnStatus]}`}
                     >
-                        {(isSending || isCancelling) ? <LoadingSpinner/> : btnStatus}
+                        {(isSending || isCancelling) ? <LoadingSpinner /> : btnStatus}
                     </button>
 
                     <button
                         type="button"
-                        onClick={()=>handleCreateChat()}
-                        className={`flex items-center justify-center ${isCreating ? 'opacity-80' : ''} rounded-xl border border-white/10 bg-primary7 px-5 py-3 text-sm font-semibold text-grey1 transition hover:bg-primary6 sm:text-base cursor-pointer`}
-                        
+                        onClick={() => handleCreateChat()}
+                        className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-primary7 px-2.5 py-2 text-[11px] font-semibold text-grey1 transition hover:bg-primary6 sm:flex-none sm:px-5 sm:py-3 sm:text-base ${isCreating ? "opacity-80" : ""}`}
                     >
-                        {isCreating ? <LoadingSpinner/> : 'Message'}
+                        {isCreating ? <LoadingSpinner /> : "Message"}
                     </button>
-                    {isConfirmOpen && <ConfirmModel sub={"Are you sure you want to remove this friend? You won't be able to see them in your friends list anymore"} title={"Remove Friend"} isLoading={isRemoving} onClose={()=>setIsConfirmOpen(false)} onConfirm={()=>handleRemoveFriend(userInfos.userId)}/>}
+
+                    {isConfirmOpen && (
+                        <ConfirmModel
+                            sub={"Are you sure you want to remove this friend? You won't be able to see them in your friends list anymore"}
+                            title={"Remove Friend"}
+                            isLoading={isRemoving}
+                            onClose={() => setIsConfirmOpen(false)}
+                            onConfirm={() => handleRemoveFriend(userInfos.userId)}
+                        />
+                    )}
                 </div>
             )}
 
-            {isOpen && <FriendsModel onClose={() => setIsOpen(false)} friendsIds={userInfos.friendsIds}/>}
+            {isOpen && (
+                <FriendsModel
+                    onClose={() => setIsOpen(false)}
+                    friendsIds={userInfos.friendsIds}
+                />
+            )}
         </div>
     );
 }

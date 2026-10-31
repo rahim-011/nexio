@@ -1,16 +1,14 @@
 import Image from "next/image";
 
-
-
-
 export default function AuthOverlay(){
     return(
-        <div className="inset-0 fixed -z-10">
+        <div className="fixed inset-0 -z-10 hidden sm:block">
             <Image 
-            alt="background image"
-            src="/background.avif"
-            fill
-            className="object-cover"/>
+                alt="background image"
+                src="/background.avif"
+                fill
+                className="object-cover"
+            />
         </div>
     )
 }

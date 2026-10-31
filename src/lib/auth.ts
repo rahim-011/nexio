@@ -22,10 +22,10 @@ const db = client.db();
 export const auth = betterAuth({
     database: mongodbAdapter(db),
 
-    trustedOrigins: [
-        process.env.NEXT_PUBLIC_APP_URL!,
-        "https://*.vercel.app",
-    ],
+   trustedOrigins: [
+    "http://localhost:3000",
+    "https://*.vercel.app",
+],
 
     plugins: [
         twoFactor({

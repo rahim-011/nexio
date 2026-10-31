@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "socket": "node --env-file=.env --import tsx --watch src/socket-server.ts",
-    "dev": "next dev",
+    "socket": "node --env-file=.env --import tsx --watch socket-server.ts",
+    "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

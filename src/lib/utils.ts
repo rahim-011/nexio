@@ -24,7 +24,8 @@ export const clearSearch = (
 
 
 export const getPostedTime = (postedTime: Date) => {
-  const diff = Date.now() - postedTime.getTime();
+    const date = new Date(postedTime);
+  const diff = Date.now() - date.getTime();
 
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);

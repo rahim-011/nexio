@@ -5,19 +5,14 @@ import express from 'express'
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
-import { auth } from "./lib/auth";
-import { prisma } from "./lib/prisma";
-import type { newMessageValue } from "@/lib/services/message";import { Chat, Message, User } from "@prisma/client";
+import { auth } from "./src/lib/auth";
+import { prisma } from "./src/lib/prisma";
+
+import type { newMessageValue } from "@/lib/services/message";
+import { Chat, Message, User } from "@prisma/client";
 
 
 
-interface ClientToServerEvents {
-    "message:send": (data: Message) => void;
-}
-
-interface ServerToClientEvents {
-    "message:new": (data: Message) => void;
-}
 // response types
 export type JoinChatResponse = {
     success: boolean;
@@ -49,22 +44,25 @@ app.get("/users/:userId/status",(req,res) =>{
 
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:3000",
-        credentials:true // accept the cookies from the front
+        origin: ["http://localhost:3000",
+            "https://z3gz75vs-3001.uks1.devtunnels.ms/"
+        ],
+        credentials:true, // accept the cookies from the front
     },
+    transports: ["websocket", "polling"]
 });
 
 // using auth to verify the authentication of the user that want to join the socket
 io.use(async (socket, next) => {
     try {
         const headers = new Headers();
-
+        
         const cookie = socket.handshake.headers.cookie;
 
         if (cookie) {
             headers.set("cookie", cookie);
         }
-
+        
         const session = await auth.api.getSession({
             headers,
         });
@@ -84,6 +82,7 @@ io.use(async (socket, next) => {
 io.on("connection", (socket) => {
     console.log("A client connected:", socket.id);
     const userId = socket.data.user.id;
+    socket.join(`user:${userId}`); // user joins a room so he can receive events of new messages even if he is not in the chat
     const count = onlineUsers.get(userId) ?? 0;
     onlineUsers.set(userId,count + 1);
 
@@ -102,6 +101,7 @@ io.on("connection", (socket) => {
         console.log("chat:join received:", chatId);
         try{
             const userId = socket.data.user.id;
+
             const chat = await prisma.chat.findUnique({
                 where:{
                     id:chatId
@@ -123,14 +123,43 @@ io.on("connection", (socket) => {
             console.log('Failed to join chat: ',error);
         }
     })
+
+
+
+
+
+
+
+    // here  when user leaves the chat we receive an event so the socket leaves the chat its currently in!
     socket.on("chat:leave",(chatId:Chat['id']) => {
         socket.leave(chatId)
     })
 
     //front send a a message and the sever receive it then send it again to the chat room;
-    socket.on("message:send", (data: newMessageValue) => {
-        io.to(data.chatId).emit("message:new", data);
+    socket.on("message:send", async(data: newMessageValue) => {
+        try{
+            const chatId = data.chatId;
+            const existingChat = await prisma.chat.findUnique({
+                where:{
+                    id:chatId
+                }
+            });
+            if (!existingChat){
+                throw new Error('Chat does not exist!')
+            }
+            if (!existingChat.participants.includes(userId)){
+                throw new Error('Unauthorized')
+            }
+            const receiverId = existingChat.participants.find(id => id!== userId);
+            io.to(chatId).emit("message:new", data);
+            io.to(`user:${receiverId}`).emit("inbox:message:new",data);
+        }
+        
+        catch(error){
+            console.log('Failed to send message: ',error)
+        }
     });
+
 
     // we did user the io. cause its a message that can be sent to all users in that chat (deffrent sockets not just this socket that we are already in with the connection event)
 });

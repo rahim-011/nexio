@@ -237,13 +237,6 @@ export async  function isOnline(userId:User['id']){
             },
         );
         if (!response.ok){
-             const errorText = await response.text();
-
-    console.error("User status request failed:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText,
-    });
             throw new Error('Failed to get user status')
         }
         const {isOnline} = await response.json();
@@ -334,6 +327,13 @@ export async function createNewMessage(values:MessageFormValue){
                 })),
                 chatId,
                 senderId:userId,
+            },
+            include:{
+                sender:{
+                    select:{
+                        username:true
+                    }
+                }
             }
         })
         const isMine = userId === newMessage.senderId;
@@ -425,9 +425,17 @@ export async function getPreviousMessages(chatId:Chat['id'],cursor:Date){
             orderBy:{
                 createdAt: "desc"
             },
-            take:limit
+            take:limit,
+            include:{
+                sender:{
+                    select:{
+                        username:true
+                    }
+                }
+            }
         })
-        const formattedMessages = loadedMessages.map(message => ({
+        const reversedMessages = loadedMessages.reverse();
+        const formattedMessages = reversedMessages.map(message => ({
             ...message,
             isMine: message.senderId === userId,
             status: 'sent' as const
@@ -452,7 +460,7 @@ export async function getLatestMessages(chatId:Chat['id']){
         const existingChat = await prisma.chat.findUnique({
             where:{
                 id:chatId
-            }
+            },
         });
         if (!existingChat){
             throw new Error('Invalid request');
@@ -468,9 +476,17 @@ export async function getLatestMessages(chatId:Chat['id']){
             orderBy:{
                 createdAt: "desc"
             },
-            take: limit
+            take: limit,
+            include:{
+                sender:{
+                    select:{
+                        username:true
+                    }
+                }
+            }
         })
-        const formattedMessages = latestMessages.map(message => ({
+        const reveresedMessages = latestMessages.reverse();
+        const formattedMessages = reveresedMessages.map(message => ({
             ...message,
             isMine: message.senderId === userId,
             status: 'sent' as const

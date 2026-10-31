@@ -11,6 +11,7 @@ import DeleteModel from "../DeleteModel";
 import { toast } from "sonner";
 import { Message } from "@prisma/client";
 import { deleteMessage } from "@/lib/services/message";
+import Image from "next/image";
 
 interface MessageBubbleProps {
     content: MessageFormValue["content"];
@@ -50,52 +51,55 @@ export default function MessageBubble({
 
     return (
         <div className={`flex w-full ${isMine ? "justify-end" : "justify-start"}`}>
-            <div className={`group relative flex max-w-[85%] items-end gap-2 sm:max-w-[75%] lg:max-w-[65%] ${isMine ? "flex-row-reverse" : "flex-row"}`}>
+            <div className={`group relative flex w-fit max-w-[98%] items-end gap-2 sm:max-w-[90%] lg:max-w-[85%] ${isMine ? "flex-row-reverse" : "flex-row"}`}>
                 <div
-                    className={`relative max-w-full rounded-[18px] px-3.5 py-2.5 ${
+                    className={`relative min-w-[120px] max-w-full rounded-[20px] px-3 py-2.5 sm:min-w-[170px] sm:px-6 sm:py-4  ${
                         isMine
                             ? "rounded-br-[5px] bg-[#2563eb] text-white"
                             : "rounded-bl-[5px] border border-[#3b4b5e] bg-[#263445] text-[#e2e8f0]"
                     }`}
                 >
                     {content && (
-                        <p className="whitespace-pre-wrap break-words text-left text-[15px] leading-[1.45] sm:text-base">
+                        <p className="whitespace-pre-wrap break-words text-left text-base leading-relaxed sm:text-lg">
                             {content}
                         </p>
                     )}
 
                     {media?.length > 0 && (
-                        <div className={`${content ? "mt-2" : ""} grid grid-cols-2 gap-1.5`}>
+                        <div className={`${content ? "mt-3" : ""} flex flex-col gap-2`}>
                             {media.map((item, index) => (
-                                <img
+                                <Image
                                     key={index}
                                     src={item.url}
                                     alt="Message attachment"
-                                    className="max-h-72 w-full rounded-lg object-cover"
+                                    width={400}
+                                    height={400}
+                                    className="max-h-80 w-full rounded-lg object-cover"
+                                    unoptimized
                                 />
                             ))}
                         </div>
                     )}
 
-                    <div className="mt-1.5 flex items-center justify-end gap-1">
-                        <span className={`text-[10px] ${isMine ? "text-blue-100/80" : "text-slate-400"}`}>
+                    <div className="mt-2 flex items-center justify-end gap-1">
+                        <span className={`text-[11px] ${isMine ? "text-blue-100/80" : "text-slate-400"}`}>
                             {createdTime}
                         </span>
 
                         {isMine && status === "sending" && (
-                            <Clock size={12} className="text-blue-100/80" />
+                            <Clock size={13} className="text-blue-100/80" />
                         )}
 
                         {isMine && status === "sent" && !readAt && (
-                            <Check size={13} strokeWidth={2.5} className="text-blue-100/80" />
+                            <Check size={14} strokeWidth={2.5} className="text-blue-100/80" />
                         )}
 
                         {isMine && status === "sent" && readAt && (
-                            <CheckCheck size={14} strokeWidth={2.5} className="text-sky-200" />
+                            <CheckCheck size={15} strokeWidth={2.5} className="text-sky-200" />
                         )}
 
                         {isMine && status === "failed" && (
-                            <AlertCircle size={13} className="text-red-200" />
+                            <AlertCircle size={14} className="text-red-200" />
                         )}
                     </div>
                 </div>

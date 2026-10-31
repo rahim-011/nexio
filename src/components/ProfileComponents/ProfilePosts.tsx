@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import type { ResourceTypes, User } from "@prisma/client";
 import EmptyPosts from "../EmptyCallbacks/EmptyPosts";
@@ -9,49 +9,51 @@ import { Fragment, useState } from "react";
 import InspectPost from "../PostComponents/InspectPost";
 import { useRouter } from "next/navigation";
 
-
-
 export type userPost = {
-        id: string;
-        user:User;
-        media: {
-            resourceType: ResourceTypes;
-            url: string;
-        };
-        postedTime: Date
-        caption: string | null;
-        comments: {
-            id: string;
-            content: string;
-            user: User
-            postId: string;
-            commentedTime: Date;
-        }[];
-        likes: {
-            id: string;
-            userId: string;
-            postId: string;
-        }[];
+    id: string;
+    user: User;
+    media: {
+        resourceType: ResourceTypes;
+        url: string;
     };
-;
-
-type ProfilePostsValues = {
-    userPosts: userPost[]
-    username: string;
-    currentUserId: User['id']
+    postedTime: Date;
+    caption: string | null;
+    comments: {
+        id: string;
+        content: string;
+        user: User;
+        postId: string;
+        commentedTime: Date;
+    }[];
+    likes: {
+        id: string;
+        userId: string;
+        postId: string;
+    }[];
 };
 
+type ProfilePostsValues = {
+    userPosts: userPost[];
+    username: string;
+    currentUserId: User["id"];
+};
 
-
-export default function ProfilePosts({userPosts,username,currentUserId}:ProfilePostsValues){
-    console.log('user posts:',userPosts);
-    const [isOpen,setIsOpen] = useState<boolean>(false);
-    const {cachedUserInfos} = useUserStore();
+export default function ProfilePosts({
+    userPosts,
+    username,
+    currentUserId
+}: ProfilePostsValues) {
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const { cachedUserInfos } = useUserStore();
     const router = useRouter();
     const isMyProfile = username === cachedUserInfos.username;
-    return(
-        <div className="flex flex-col gap-2 p-2">
-            <h2 className="text-grey1 text-[1.7rem]">Posts</h2>
+
+    return (
+        <div className="flex min-w-0 flex-col gap-3 p-2 sm:gap-4 sm:p-3">
+            <h2 className="text-xl font-semibold text-grey1 sm:text-2xl">
+                Posts
+            </h2>
+
             {userPosts.length === 0 ? (
                 isMyProfile ? (
                     <EmptyPosts />
@@ -59,17 +61,28 @@ export default function ProfilePosts({userPosts,username,currentUserId}:ProfileP
                     <EmptyPostsViste />
                 )
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2">
-                    {userPosts.map(post => {
-                        return(
-                            <Fragment key={post.id}>
-                                <Post postInfos={post} onOpen={()=>setIsOpen(true)}/>
-                                {isOpen && <InspectPost onClose={()=>{setIsOpen(false);router.refresh()}} postInfos={post} currentUserId={currentUserId}/>}
-                            </Fragment>
-                        )
-                    })}
+                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+                    {userPosts.map((post) => (
+                        <Fragment key={post.id}>
+                            <Post
+                                postInfos={post}
+                                onOpen={() => setIsOpen(true)}
+                            />
+
+                            {isOpen && (
+                                <InspectPost
+                                    onClose={() => {
+                                        setIsOpen(false);
+                                        router.refresh();
+                                    }}
+                                    postInfos={post}
+                                    currentUserId={currentUserId}
+                                />
+                            )}
+                        </Fragment>
+                    ))}
                 </div>
             )}
         </div>
-    )
+    );
 }

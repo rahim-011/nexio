@@ -13,6 +13,7 @@ import { uploadToCloudinary } from "@/lib/uploadToCloudinary";
 import { createNewMessage } from "@/lib/services/message";
 import { socket,verifyConnection } from "@/lib/socket";
 import { DisplayMessage } from "./MessageSub";
+import { useUserStore } from "@/lib/store/userStore";
 
 export interface SelectedImage {
   publicId: string;
@@ -26,7 +27,8 @@ interface MessageSubFooterProps {
     scrollToBottom: () => void,
 }
 
-export type MessageFormValue = z.infer<typeof messageSchema>;
+export type MessageFormValueInput = z.input<typeof messageSchema>;
+export type MessageFormValue = z.output<typeof messageSchema>;
 
 export default function MessageSubFooter({
     chatId,
@@ -37,8 +39,8 @@ export default function MessageSubFooter({
     const [isUploading,setIsUploading] = useState<boolean>(false);
     const [images, setImages] = useState<SelectedImage[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const form = useForm<MessageFormValue>({
+  const {cachedUserInfos} = useUserStore();
+    const form = useForm<MessageFormValueInput, any, MessageFormValue>({
         resolver: zodResolver(messageSchema),
         defaultValues: {
           content: "",
@@ -47,11 +49,15 @@ export default function MessageSubFooter({
         },
     });
 
-    const {
-        register,
-        handleSubmit,
-        formState: { isDirty },
-    } = form;
+      const {
+      register,
+      handleSubmit,
+      setValue,
+      watch,
+  } = form;
+
+  const content = watch("content") ?? "";
+  const canSend = Boolean(content.trim()) || images.length > 0;
 
 
     const onSubmit = async (values: MessageFormValue) => {
@@ -63,10 +69,13 @@ export default function MessageSubFooter({
           chatId,
           content: values.content,
           senderId: currentUserId,
+          sender:{
+            username: cachedUserInfos.username
+          },
           createdAt: new Date(),
           updatedAt: new Date(),
           readAt: null,
-          images,
+          images: values.media,
           isMine: true,
           status: "sending"
       };
@@ -77,19 +86,21 @@ export default function MessageSubFooter({
       form.reset();
       setImages([]);
       try {
-        const result = await createNewMessage({chatId,content:values.content,media:images});
+        const result = await createNewMessage({chatId,content:values.content,media:values.media});
         if (!result.success){
             toast.error('Failed to submit message!');
             setMessages(prev => prev.filter(message => message?.id != tempId));
             return;
         }
         setMessages(prev => prev.map(message => (
-          message.id === tempId ? {...result.newMessage,status:"sent"} : message
+          message.id === tempId ? {...result.newMessage,sender:{
+            username: message.sender.username
+          },status:"sent"} : message
         )))
         await verifyConnection();
         socket.emit("message:send",(result.newMessage));
       }
-      catch {
+      catch(error) {
         setMessages(prev => prev.filter(message => message?.id !== tempId));
         toast.error('Somthing went wrong,please try again.')
       }
@@ -100,11 +111,16 @@ export default function MessageSubFooter({
             if (!file) return;
             setIsUploading(true);
             const uploadedFile = await uploadToCloudinary(file,`chat/${chatId}`);
-            const {url,publicId,resourceType} = uploadedFile;
-            setImages(prev => [...prev,{url,publicId,resourceType:resourceType}])
+            const updatedImages = [...images,uploadedFile];
+            setImages(updatedImages)
+            setValue("media",updatedImages,{
+              shouldValidate:true,
+              shouldDirty:true
+            });
         }
         catch(error){
             toast.error('Failed to process file!')
+            console.log(error);
         }
         finally{
             setIsUploading(false);
@@ -149,9 +165,8 @@ export default function MessageSubFooter({
       <FormProvider {...form}>
         <form
           onSubmit={handleSubmit(
-    onSubmit,
-    (errors) => console.log("Validation errors:", errors)
-  )}
+            onSubmit
+          )}
           className="flex w-full items-end gap-2 sm:gap-3"
         >
           <input
@@ -188,8 +203,8 @@ export default function MessageSubFooter({
           <button
             type="submit"
             aria-label="Send message"
-            disabled={isUploading || !isDirty}
-            className={`flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-[#243b53] text-white transition hover:opacity-90 active:scale-95 disabled:opacity-50 sm:h-14 sm:w-14 ${!isDirty ? 'opacity-80' : ''}`}
+            disabled={isUploading || !canSend}
+            className={`flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-[#243b53] text-white transition hover:opacity-90 active:scale-95 disabled:opacity-50 sm:h-14 sm:w-14 ${!canSend ? 'opacity-80' : ''}`}
           >
               <Send size={25} className="hidden sm:block" />
               <Send size={22} className="sm:hidden" />

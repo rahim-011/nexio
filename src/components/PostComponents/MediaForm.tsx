@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Controller, ControllerRenderProps, useFormContext } from "react-hook-form";
@@ -75,15 +74,15 @@ export default function MediaForm() {
                             processFile(e.dataTransfer.files?.[0], field);
                         }
                     }}
-                    className={`flex h-full min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed p-4 transition-all duration-200 sm:p-6 ${
+                    className={`flex h-full min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed p-2 text-center transition-all duration-200 sm:rounded-2xl sm:p-6 ${
                         isDragging
                             ? "border-primary5 bg-primary5/10"
                             : "border-white/15 bg-white/[0.03] hover:border-white/25"
                     }`}
                 >
                     {isUploading && localPreview.url ? (
-                        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-4">
-                            <div className="relative min-h-0 w-full max-w-2xl flex-1 overflow-hidden rounded-xl bg-black/20">
+                        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-2 sm:gap-4">
+                            <div className="relative min-h-0 w-full max-w-2xl flex-1 overflow-hidden rounded-lg bg-black/20 sm:rounded-xl">
                                 {localPreview.type.startsWith("image/") ? (
                                     <Image
                                         src={localPreview.url}
@@ -103,14 +102,16 @@ export default function MediaForm() {
                                     />
                                 )}
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                                    <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white sm:h-10 sm:w-10" />
                                 </div>
                             </div>
-                            <p className="shrink-0 text-sm text-white/70">Uploading...</p>
+                            <p className="shrink-0 text-xs text-white/70 sm:text-sm">
+                                Uploading...
+                            </p>
                         </div>
                     ) : media?.url ? (
-                        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-4">
-                            <div className="relative min-h-0 w-full max-w-2xl flex-1 overflow-hidden rounded-xl bg-black/20">
+                        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-2 sm:gap-4">
+                            <div className="relative min-h-0 w-full max-w-2xl flex-1 overflow-hidden rounded-lg bg-black/20 sm:rounded-xl">
                                 {media.resourceType === "image" ? (
                                     <Image
                                         src={media.url}
@@ -132,28 +133,28 @@ export default function MediaForm() {
                             <button
                                 type="button"
                                 onClick={() => inputRef.current?.click()}
-                                className="shrink-0 cursor-pointer rounded-lg bg-primary5 px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
+                                className="shrink-0 cursor-pointer rounded-lg bg-primary5 px-4 py-2 text-xs font-medium text-white transition-all hover:brightness-110 sm:px-5 sm:py-2.5 sm:text-sm"
                             >
                                 Change file
                             </button>
                         </div>
                     ) : (
-                        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-4 text-center">
+                        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-3 text-center sm:gap-4">
                             <IconStack />
                             <div className="space-y-1">
-                                <h3 className="text-lg font-semibold text-white">
+                                <h3 className="text-base font-semibold text-white sm:text-lg">
                                     Drag photos and videos here
                                 </h3>
-                                <p className="text-sm text-white/50">
-                                    or select a file from your computer
+                                <p className="text-xs text-white/50 sm:text-sm">
+                                    or select a file from your device
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => inputRef.current?.click()}
-                                className="cursor-pointer rounded-lg bg-primary5 px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
+                                className="cursor-pointer rounded-lg bg-primary5 px-4 py-2 text-xs font-medium text-white transition-all hover:brightness-110 sm:px-5 sm:py-2.5 sm:text-sm"
                             >
-                                Select from computer
+                                Select a file
                             </button>
                         </div>
                     )}
@@ -170,7 +171,7 @@ export default function MediaForm() {
                     />
 
                     {(errorMessage || fieldState.error) && (
-                        <p className="mt-3 shrink-0 text-sm text-red-400">
+                        <p className="mt-2 shrink-0 text-xs text-red-400 sm:mt-3 sm:text-sm">
                             {errorMessage || fieldState.error?.message}
                         </p>
                     )}

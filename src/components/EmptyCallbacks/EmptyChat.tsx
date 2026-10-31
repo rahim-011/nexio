@@ -1,31 +1,42 @@
 'use client'
 
-
 import { Send } from "lucide-react";
 import { useState } from "react";
 import Overlay from "../Overlay";
-import AddNewMessage from "../ChatComponents/AddNewMessage";
 import NewMessageModel from "../ChatComponents/NewMessageModel";
 
 export default function EmptyChat() {
-    const [isOpen,setIsOpen] = useState<Boolean>(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="flex flex-col items-center justify-center p-4 gap-4 w-full">
-            <div className="flex items-center justify-center text-grey1 border border-grey1 p-8 rounded-full mb-2">
-                <Send size={75} strokeWidth={1} />
+        <div className="flex w-full flex-col items-center justify-center gap-3 p-3 sm:gap-4 sm:p-4">
+            <div className="mb-1 flex items-center justify-center rounded-full border border-grey1 p-5 text-grey1 sm:mb-2 sm:p-8">
+                <Send size={42} strokeWidth={1} className="sm:h-[60px] sm:w-[60px] lg:h-[75px] lg:w-[75px]" />
             </div>
+
             <div className="flex flex-col gap-1 text-center">
-                <h1 className="text-3xl text-grey1">Your Messages</h1>
-                <p className="text-grey4 text-[1rem]">Send a message to start a chat</p>
+                <h1 className="text-2xl text-grey1 sm:text-3xl">
+                    Your Messages
+                </h1>
+
+                <p className="text-sm text-grey4 sm:text-base">
+                    Send a message to start a chat
+                </p>
             </div>
-            <button className="text-grey7 rounded-lg py-2 px-7 hover:brightness-95 transition-all bg-grey1 mt-2 cursor-pointer" onClick={()=>setIsOpen(true)}>
+
+            <button
+                className="mt-1 cursor-pointer rounded-lg bg-grey1 px-6 py-2 text-sm text-grey7 transition-all hover:brightness-95 sm:mt-2 sm:px-7 sm:text-base"
+                onClick={() => setIsOpen(true)}
+            >
                 Send Message
             </button>
-            {isOpen && <div>
-                <Overlay closeModel={() =>setIsOpen(false)}/>
-                <NewMessageModel closeModel={()=>setIsOpen(false)}/>B
-            </div>}
+
+            {isOpen && (
+                <div>
+                    <Overlay closeModel={() => setIsOpen(false)} />
+                    <NewMessageModel closeModel={() => setIsOpen(false)} />
+                </div>
+            )}
         </div>
     );
 }

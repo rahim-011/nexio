@@ -1,4 +1,3 @@
-
 "use client";
 
 import { FormProvider, useForm } from "react-hook-form";
@@ -12,12 +11,15 @@ import MediaOverview from "./MediaOverview";
 import CaptionContainer from "./CaptionContainer";
 import { createPost } from "@/lib/services/posts";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "@/lib/store/userStore";
 
 export type PostFormValues = z.infer<typeof postSchema>;
 
-export default function PostForm({onClose}:{onClose:()=>void}) {
+export default function PostForm({ onClose }: { onClose: () => void }) {
     const { currentStep } = usePostStore();
+    const { cachedUserInfos } = useUserStore();
     const router = useRouter();
+
     const form = useForm<PostFormValues>({
         resolver: zodResolver(postSchema),
         defaultValues: {
@@ -31,14 +33,16 @@ export default function PostForm({onClose}:{onClose:()=>void}) {
     const onSubmit = async (values: PostFormValues) => {
         try {
             const result = await createPost(values);
-            if (!result.success){
+
+            if (!result.success) {
                 toast.error("Failed to create post. Please try again.");
                 return;
             }
+
             toast.success("Post created successfully!");
             onClose();
-            usePostStore.setState({currentStep:0});
-            router.refresh();
+            usePostStore.setState({ currentStep: 0 });
+            router.push(`/profile/${cachedUserInfos.username}`);
         } catch {
             toast.error("Something went wrong, please try again.");
         }
@@ -58,14 +62,14 @@ export default function PostForm({onClose}:{onClose:()=>void}) {
                 )}
 
                 {currentStep === 1 && (
-                    <div className="h-full min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-primary7">
+                    <div className="h-full min-h-0 w-full flex-1 overflow-hidden rounded-lg bg-primary7 sm:rounded-xl">
                         {media?.url && media?.resourceType ? (
                             <MediaOverview
                                 url={media.url}
                                 resourceType={media.resourceType}
                             />
                         ) : (
-                            <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                            <div className="flex h-full items-center justify-center px-2 text-xs text-gray-400 sm:text-sm">
                                 No media selected
                             </div>
                         )}
@@ -73,8 +77,8 @@ export default function PostForm({onClose}:{onClose:()=>void}) {
                 )}
 
                 {currentStep === 2 && (
-                    <div className="grid h-full min-h-0 w-full flex-1 grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                        <div className="hidden min-h-0 overflow-hidden rounded-xl bg-primary7 md:block">
+                    <div className="grid h-full min-h-0 w-full flex-1 grid-cols-1 gap-2 sm:gap-4 md:grid-cols-2 md:gap-6">
+                        <div className="hidden min-h-0 overflow-hidden rounded-lg bg-primary7 md:block md:rounded-xl">
                             {media?.url && media?.resourceType && (
                                 <MediaOverview
                                     url={media.url}

@@ -70,7 +70,7 @@ export async function getUserProfileInfos(username:User['username']){
             ...targetUserInfos,
             currentUserId:currentUserId,
             profileLabel,
-            posts: targetUserInfos.posts.map(post => ({
+            posts: targetUserInfos.posts.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()).map(post => ({
                 ...post,
                 postedTime: post.createdAt,
                 comments: post.comments.map(comment => ({

@@ -17,7 +17,6 @@ interface MessageModelProps {
 export default function MessagesModel({ onClose, inboxes, onDelete }: MessageModelProps) {
     const { cachedUserInfos } = useUserStore();
     const { username } = cachedUserInfos;
-
     return (
         <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-primary7">
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-primary5/40 px-4 py-4 sm:px-5 md:py-5">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Controller, useFormContext } from "react-hook-form";
@@ -26,7 +25,7 @@ export default function CaptionForm() {
             control={control}
             name="postCaption"
             render={({ field }) => (
-                <Field className="relative flex h-full min-h-0 flex-col rounded-xl border border-white/10 bg-[#0a192f] p-4 text-white">
+                <Field className="relative flex h-full min-h-0 flex-col rounded-lg border border-white/10 bg-[#0a192f] p-2.5 text-white sm:rounded-xl sm:p-4">
                     <textarea
                         {...field}
                         value={caption}
@@ -39,10 +38,10 @@ export default function CaptionForm() {
                         rows={4}
                         maxLength={200}
                         placeholder="Add a caption ..."
-                        className="min-h-0 w-full flex-1 resize-none bg-transparent text-sm leading-6 text-white outline-none placeholder:text-gray-500"
+                        className="min-h-0 w-full flex-1 resize-none bg-transparent text-xs leading-5 text-white outline-none placeholder:text-gray-500 sm:text-sm sm:leading-6"
                     />
 
-                    <div className="flex shrink-0 items-center justify-between border-t border-gray-800 pt-3 text-gray-400">
+                    <div className="flex shrink-0 items-center justify-between border-t border-gray-800 pt-2.5 text-gray-400 sm:pt-3">
                         <div className="relative">
                             <button
                                 type="button"
@@ -54,12 +53,12 @@ export default function CaptionForm() {
                             </button>
 
                             {isOpen && (
-                                <div className="absolute bottom-10 left-0 z-[100] overflow-hidden rounded-xl border border-slate-700 shadow-2xl">
+                                <div className="absolute bottom-10 left-0 z-[100] w-[min(320px,calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-700 shadow-2xl">
                                     <EmojiPicker
                                         onEmojiClick={handleEmojiClick}
                                         theme={Theme.DARK}
-                                        width={320}
-                                        height={380}
+                                        width="100%"
+                                        height={350}
                                         searchPlaceHolder="Search emoji..."
                                         previewConfig={{ showPreview: false }}
                                         skinTonesDisabled
@@ -68,7 +67,7 @@ export default function CaptionForm() {
                             )}
                         </div>
 
-                        <span className="text-xs tabular-nums">
+                        <span className="text-[11px] tabular-nums sm:text-xs">
                             {caption.length}/200
                         </span>
                     </div>

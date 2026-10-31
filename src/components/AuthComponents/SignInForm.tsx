@@ -1,6 +1,5 @@
 'use client'
 
-
 import { signInSchema } from "@/schemas/authSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -14,8 +13,6 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import LoadingSpinner from "../LoadingSpinner";
-
-
 
 export type SignInFormValues = z.infer<typeof signInSchema>;
 
@@ -53,23 +50,21 @@ export default function SignInForm(){
         }
     }
 
-
-    
     return(
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-2 sm:gap-3">
                 <Controller
                     name="email"
                     control={form.control}
                     render={({ field, fieldState }) => (
                         <Field>
-                            <FieldLabel className="text-grey1 text-[1.2rem]">
+                            <FieldLabel className="text-grey1 text-sm sm:text-[1.2rem]">
                                 Email
                             </FieldLabel>
 
                             <Input
                                 {...field}
-                                className={`ring-0 focus-within:ring-0 text-grey7 rounded-lg px-3 py-0 bg-grey3 outline-none text-[1.1rem] w-full h-12 border ${
+                                className={`ring-0 focus-within:ring-0 text-grey7 rounded-lg px-3 py-0 bg-grey3 outline-none text-sm sm:text-[1.1rem] w-full h-10 sm:h-12 border ${
                                     fieldState.invalid
                                         ? "border-red-500"
                                         : "border-transparent"
@@ -79,7 +74,7 @@ export default function SignInForm(){
                             {fieldState.invalid && (
                                 <FieldError
                                     errors={[fieldState.error]}
-                                    className="text-[1.1rem] text-red-500"
+                                    className="text-xs sm:text-[1.1rem] text-red-500"
                                 />
                             )}
                         </Field>
@@ -90,43 +85,42 @@ export default function SignInForm(){
                     control={form.control}
                     render={({field,fieldState})=>(
                         <Field>
-                            <FieldLabel className="text-grey1 text-[1.2rem]">Password</FieldLabel>
-                            <div className="relative flex flex-col gap-2">
-                                <Input
-                                    {...field}
-                                    className={`ring-0 focus-within:ring-0 text-grey7 rounded-lg p-3 bg-grey3 outline-none text-[1.1rem] w-full border ${fieldState.invalid ? 'border-red-500' : ''}`}
-                                    type={showPass ? "text" : "password"}
-                                />
+                            <FieldLabel className="text-grey1 text-sm sm:text-[1.2rem]">Password</FieldLabel>
+                            <div className="flex flex-col gap-2">
+                                <div className="relative w-full">
+                                    <Input
+                                        {...field}
+                                        className={`ring-0 focus-within:ring-0 text-grey7 rounded-lg pl-3 pr-11 py-0 bg-grey3 outline-none text-sm sm:text-[1.1rem] w-full h-10 sm:h-12 border ${fieldState.invalid ? 'border-red-500' : 'border-transparent'}`}
+                                        type={showPass ? "text" : "password"}
+                                    />
 
-                                {!showPass? (
-                                    <EyeOff
-                                        className="absolute text-grey6 top-1/3 -translate-y-1/2 right-3 cursor-pointer"
-                                        size={22}
-                                        onClick={() => setShowPass(prev => !prev)}
-                                    />
-                                ) : (
-                                    <Eye
-                                        size={22}
-                                        onClick={() => setShowPass(prev => !prev)}
-                                        className="absolute text-grey6 top-1/3 -translate-y-1/2 right-3 cursor-pointer"
-                                    />
-                                )}
-                                {!errors.password && <Link href="/forget-password" className="text-error3 hover:brightness-110 underline cursor-pointer self-end">Forget password?</Link>}
+                                    {!showPass? (
+                                        <EyeOff
+                                            className="absolute text-grey6 right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+                                            size={20}
+                                            onClick={() => setShowPass(prev => !prev)}
+                                        />
+                                    ) : (
+                                        <Eye
+                                            size={20}
+                                            onClick={() => setShowPass(prev => !prev)}
+                                            className="absolute text-grey6 right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+                                        />
+                                    )}
+                                </div>
+                                {!errors.password && <Link href="/forget-password" className="text-error3 text-xs sm:text-sm hover:brightness-110 underline cursor-pointer self-end">Forget password?</Link>}
                             </div>
-                            {errors.password && <div className="flex items-center justify-between">
-                                {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-red-500 text-[1.1rem]"/>}
-                                <Link href="/reset-password" className="text-error3 hover:brightness-110 underline cursor-pointer">Forget password?</Link>
+                            {errors.password && <div className="flex items-center justify-between gap-2">
+                                {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-red-500 text-xs sm:text-[1.1rem]"/>}
+                                <Link href="/reset-password" className="text-error3 text-xs sm:text-sm hover:brightness-110 underline cursor-pointer shrink-0">Forget password?</Link>
                             </div>}
-                            
+
                         </Field>
                     )}/>
-                <button disabled={!isDirty || isSubmitting} className={`flex items-center justify-center text-grey1 text-center bg-primary5 hover:brightness-115 cursor-pointer px-6 py-3 rounded-lg text-[1.1rem] mt-3 transition-all ${!isDirty ? 'opacity-70' : ''}`}>{isSubmitting ? <LoadingSpinner/>  : 'Login'}</button>
-                {errMsg && <p className="text-red-500 text-[1rem] text-center self-center justify-self-center">{errMsg}</p>}
+                <button disabled={!isDirty || isSubmitting} className={`flex items-center justify-center text-grey1 text-center bg-primary5 hover:brightness-115 cursor-pointer px-5 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-[1.1rem] mt-1 sm:mt-3 transition-all ${!isDirty ? 'opacity-70' : ''}`}>{isSubmitting ? <LoadingSpinner/>  : 'Login'}</button>
+                {errMsg && <p className="text-red-500 text-xs sm:text-[1rem] text-center self-center justify-self-center">{errMsg}</p>}
             </form>
         </FormProvider>
-        
+
     )
 }
-
-
-

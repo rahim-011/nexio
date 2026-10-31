@@ -4,12 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 
-
 export async function GET(req:NextRequest) {
     try{
         const {searchParams} = new URL(req.url);
-        const allowedFolders = ['posts','avatars'];
-        const requestedFolder = searchParams.get('folder');
+        const allowedFolders = ['posts','avatars','chat'];
+        const requestedFolder = searchParams.get('folder')?.split('/')[0];
         if (!requestedFolder || !allowedFolders.includes(requestedFolder)){
             return NextResponse.json({error:'Invalid folder'},{status:400})
         }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -21,20 +20,30 @@ export default function PostModel({
     useEffect(() => {
         setMounted(true);
 
-        const previousOverflow = document.body.style.overflow;
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+        const previousBodyOverscroll = document.body.style.overscrollBehavior;
+        const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+
         document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overscrollBehavior = "none";
+        document.documentElement.style.overscrollBehavior = "none";
 
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape"){
+            if (e.key === "Escape") {
                 closeModel();
-                usePostStore.setState({currentStep:0});
-            };
+                usePostStore.setState({ currentStep: 0 });
+            }
         };
 
         window.addEventListener("keydown", onKeyDown);
 
         return () => {
-            document.body.style.overflow = previousOverflow;
+            document.body.style.overflow = previousBodyOverflow;
+            document.documentElement.style.overflow = previousHtmlOverflow;
+            document.body.style.overscrollBehavior = previousBodyOverscroll;
+            document.documentElement.style.overscrollBehavior = previousHtmlOverscroll;
             window.removeEventListener("keydown", onKeyDown);
         };
     }, [closeModel]);
@@ -43,16 +52,22 @@ export default function PostModel({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-primary7/60 p-3 backdrop-blur-sm sm:p-6"
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-primary9 sm:bg-primary7/60 sm:p-6 sm:backdrop-blur-sm"
             onMouseDown={(e) => {
-                if (e.target === e.currentTarget) closeModel();
+                if (e.target === e.currentTarget) {
+                    closeModel();
+                    usePostStore.setState({ currentStep: 0 });
+                }
             }}
         >
             <button
                 type="button"
-                onClick={()=>{closeModel(),usePostStore.setState({currentStep:0})}}
+                onClick={() => {
+                    closeModel();
+                    usePostStore.setState({ currentStep: 0 });
+                }}
                 aria-label="Close"
-                className="absolute right-3 top-3 z-10 rounded-full p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white sm:right-6 sm:top-6"
+                className="absolute right-3 top-3 z-20 hidden rounded-full p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white sm:block"
             >
                 <X size={24} />
             </button>
@@ -60,19 +75,25 @@ export default function PostModel({
             <div
                 role="dialog"
                 aria-modal="true"
-                className="flex h-[min(700px,88dvh)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-primary9 text-white shadow-2xl"
+                className="flex h-dvh w-full flex-col overflow-hidden bg-primary9 text-sm text-white sm:h-[min(700px,88dvh)] sm:max-w-4xl sm:rounded-2xl sm:border sm:border-white/10 sm:text-base sm:shadow-2xl"
             >
                 <div className="shrink-0">
                     {currentStep === 0 ? (
-                        <DefaultStepTitle />
+                        <DefaultStepTitle
+                            onClose={() => {
+                                closeModel();
+                                usePostStore.setState({ currentStep: 0 });
+                            }}
+                        />
                     ) : currentStep === 1 ? (
                         <FirstStepPostTitle />
                     ) : currentStep === 2 ? (
                         <FinalStepPostTitle />
                     ) : null}
                 </div>
-                <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-5">
-                    <PostForm onClose={()=>closeModel()}/>
+
+                <div className="flex min-h-0 flex-1 flex-col p-2 sm:p-5">
+                    <PostForm onClose={() => closeModel()} />
                 </div>
             </div>
         </div>,

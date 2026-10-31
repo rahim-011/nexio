@@ -1,4 +1,3 @@
-
 'use client'
 
 import { Bell, Ellipsis, MessageCircle, Plus, Power, Settings, User, Users } from "lucide-react";
@@ -16,7 +15,7 @@ import MessagesModel from "./MessagesComponents/MessagesModel";
 import { getAllMessagesInboxes, messageInboxesValue, newMessageValue } from "@/lib/services/message";
 import { Chat } from "@prisma/client";
 import { useSocket } from "@/hooks/useSocket";
-import { socket, verifyConnection } from "@/lib/socket";
+import { socket } from "@/lib/socket";
 
 interface LeftSideProps {
     userInfos: userInfos | null
@@ -45,14 +44,12 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
     const isChatPage = isMessagesPage && !isMessagesRoot;
 
     const expanded = !isSmall && (!isChatPage || isHovered);
-    const sidebarWidth = expanded ? 256 : 76;
+    const sidebarWidth = expanded ? 256 : 68;
 
     const showPanel =
         showLeftSide &&
         isMessagesPage &&
         (isSmall ? isMessagesRoot : isMessageModelOpen);
-
-    const showChatRail = isSmall && isChatPage;
 
     const activeChatId = isChatPage ? pathname.split("/")[2] : null;
 
@@ -66,8 +63,70 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
         setIsMessageModelOpen(isMessagesPage);
     }, [isMessagesPage]);
 
+    useEffect(()=>{
+        const fetchNewMessage = (newMessage: newMessageValue) => {
+            setInboxes(prev => {
+                return prev.map(inbox => (
+                    inbox.id === newMessage.chatId
+                        ? {
+                            ...inbox,
+                            messages: [{
+                                id: newMessage.id,
+                                chatId: newMessage.chatId,
+                                content: newMessage.content,
+                                readAt: newMessage.readAt,
+                                createdAt: newMessage.createdAt,
+                                sender: {
+                                    id: newMessage.senderId,
+                                    username: newMessage.sender.username
+                                }
+                            }]
+                        }
+                        : inbox
+                ));
+            });
+        };
+        socket.on("message:new",fetchNewMessage);
+        return  () => {
+            socket.off("message:new",fetchNewMessage)
+        }
+    },[])
+
+    useEffect(()=>{
+        const handleNewInboxMessage = (newMessage:newMessageValue) =>{
+            setInboxes(prev => {
+                const updatedInbox = prev.find(inbox => inbox.id === newMessage.chatId);
+                if (!updatedInbox) return prev;
+                const updated = {
+                    ...updatedInbox,
+                    messages: [
+                        {
+                         id: newMessage.id,
+                        chatId: newMessage.chatId,
+                        content: newMessage.content,
+                        readAt: newMessage.readAt ?? null,
+                        createdAt: newMessage.createdAt,
+                        sender: {
+                            id: newMessage.senderId,
+                            username: newMessage.sender.username
+                        }   
+                        }
+                    ]
+                };
+                return [
+                    updated,
+                    ...prev.filter(inbox => inbox.id !== newMessage.chatId)
+                ]
+            })
+        }
+        socket.on("inbox:message:new",handleNewInboxMessage);
+        return () =>{
+            socket.off("inbox:message:new",handleNewInboxMessage);
+        }
+    },[])
+
     useEffect(() => {
-        const mq = window.matchMedia("(max-width: 767px)");
+        const mq = window.matchMedia("(max-width: 1280px)");
 
         const update = () => setIsSmall(mq.matches);
 
@@ -82,12 +141,10 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
 
         body.style.transition = "padding-left 300ms ease-in-out";
 
-        if (!showLeftSide) {
+        if (!showLeftSide || isSmall) {
             body.style.paddingLeft = "";
-        } else if (isSmall) {
-            body.style.paddingLeft = showChatRail ? "64px" : "";
         } else {
-            const extraSidebarWidth = sidebarWidth - 76;
+            const extraSidebarWidth = sidebarWidth - 68;
             const panelWidth = showPanel ? 360 : 0;
 
             body.style.paddingLeft = `${extraSidebarWidth + panelWidth}px`;
@@ -97,7 +154,8 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
             body.style.paddingLeft = "";
             body.style.transition = "";
         };
-    }, [showLeftSide, isSmall, sidebarWidth, showPanel, showChatRail]);
+    }, [showLeftSide, isSmall, sidebarWidth, showPanel]);
+
     useEffect(() => {
         const fetchInboxes = async () => {
             try {
@@ -113,22 +171,21 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                 toast.error("Something went wrong, please try again.");
             }
         };
+
         fetchInboxes();
     }, [pathname]);
-    
-    
 
     const navLinks = [
-        { label: "Chats", icon: <MessageCircle size={22} className="shrink-0" />, path: "/messages" },
-        { label: "Friends", icon: <Users size={22} className="shrink-0" />, path: "/add-friends" },
-        { label: "Requests", icon: <Bell size={22} className="shrink-0" />, path: "/requests" },
-        { label: "Post", icon: <Plus size={22} className="shrink-0" />, path: "/post" }
+        { label: "Chats", icon: <MessageCircle size={20} className="shrink-0" />, path: "/messages" },
+        { label: "Friends", icon: <Users size={20} className="shrink-0" />, path: "/add-friends" },
+        { label: "Requests", icon: <Bell size={20} className="shrink-0" />, path: "/requests" },
+        { label: "Post", icon: <Plus size={20} className="shrink-0" />, path: "/post" }
     ];
 
     const modelLinks = [
-        { label: "Settings", icon: <Settings size={22} className="shrink-0" />, path: "/settings/edit-profile" },
-        { label: "Profile", icon: <User size={22} className="shrink-0" />, path: `/profile/${username}` },
-        { label: "Log Out", icon: <Power size={22} className="shrink-0" />, path: "/sign-in" },
+        { label: "Settings", icon: <Settings size={20} className="shrink-0" />, path: "/settings/edit-profile" },
+        { label: "Profile", icon: <User size={20} className="shrink-0" />, path: `/profile/${username}` },
+        { label: "Log Out", icon: <Power size={20} className="shrink-0" />, path: "/sign-in" },
     ];
 
     useEffect(() => {
@@ -164,17 +221,21 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                     setIsOpen(false);
                 }}
                 className={`fixed left-0 top-0 z-40 flex h-dvh flex-col justify-between overflow-visible border-r border-primary5/40 bg-primary7 transition-[width,padding] duration-300 ease-in-out ${
-                    expanded ? "w-64 p-4" : "w-[76px] px-2 py-6"
+                    isSmall && isChatPage
+                        ? "hidden"
+                        : expanded
+                            ? "w-64 p-4"
+                            : "w-[68px] px-1.5 py-5"
                 }`}
             >
-                <div className="flex min-w-0 flex-col gap-8">
-                    <div className={`flex h-16 w-full min-w-0 items-center overflow-hidden ${expanded ? "justify-start px-2" : "justify-center"}`}>
+                <div className="flex min-w-0 flex-col gap-6">
+                    <div className={`flex h-14 w-full min-w-0 items-center overflow-hidden ${expanded ? "justify-start px-2" : "justify-center"}`}>
                         <Link
                             href="/"
                             aria-label="Nexio"
-                            className={`flex h-10 min-w-0 shrink-0 items-center ${expanded ? "gap-3" : "w-10 justify-center"}`}
+                            className={`flex h-9 min-w-0 shrink-0 items-center ${expanded ? "gap-3" : "w-9 justify-center"}`}
                         >
-                            <div className="h-10 w-10 shrink-0 bg-current text-grey1 [mask-image:url('/chatLogo.svg')] [mask-size:contain] [mask-repeat:no-repeat]" />
+                            <div className="h-9 w-9 shrink-0 bg-current text-grey1 [mask-image:url('/chatLogo.svg')] [mask-size:contain] [mask-repeat:no-repeat]" />
 
                             <span className={`${alatsi.className} whitespace-nowrap text-[1.8rem] text-grey1 transition-opacity duration-200 ${expanded ? "opacity-100" : "hidden opacity-0"}`}>
                                 Nexio
@@ -190,7 +251,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                                 ? "bg-primary2 text-grey1 shadow-sm"
                                 : "text-grey3 hover:bg-primary6 hover:text-grey1";
 
-                            const itemClass = `group relative flex h-12 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-xl transition-[background-color,color,transform] duration-200 active:scale-[0.97] ${
+                            const itemClass = `group relative flex h-11 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-xl transition-[background-color,color,transform] duration-200 active:scale-[0.97] ${
                                 expanded ? "gap-3 px-4" : "justify-center px-0"
                             } ${activeClass}`;
 
@@ -223,7 +284,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                                         }}
                                         title={!expanded ? link.label : undefined}
                                         aria-expanded={showPanel}
-                                        className={`group relative flex h-12 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-xl transition-[background-color,color,transform] duration-200 active:scale-[0.97] ${
+                                        className={`group relative flex h-11 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-xl transition-[background-color,color,transform] duration-200 active:scale-[0.97] ${
                                             expanded ? "gap-3 px-4" : "justify-center px-0"
                                         } ${
                                             showPanel || isActive
@@ -259,7 +320,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                 <div className="relative min-w-0" ref={closeModel}>
                     {isOpen && (
                         <div className={`absolute bottom-full z-50 mb-3 rounded-xl border border-primary5/50 bg-primary8 p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 ${
-                            expanded ? "left-0 w-full" : "left-[60px] w-56"
+                            expanded ? "left-0 w-full" : "left-[56px] w-56"
                         }`}>
                             {modelLinks.map(link => {
                                 const activeClass = pathname === link.path
@@ -284,7 +345,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                         </div>
                     )}
 
-                    <div className={`relative flex h-14 w-full min-w-0 items-center rounded-xl border border-primary5/40 transition-colors duration-200 hover:bg-primary6/60  ${
+                    <div className={`relative flex h-12 w-full min-w-0 items-center rounded-xl border border-primary5/40 transition-colors duration-200 hover:bg-primary6/60 ${
                         expanded ? "justify-between px-2" : "justify-center px-0"
                     }`}>
                         <ProfileIcon expanded={expanded} />
@@ -297,7 +358,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                                 onClick={() => setIsOpen(prev => !prev)}
                                 className="shrink-0 rounded-lg p-2 text-grey3 transition-colors duration-200 hover:bg-primary5 hover:text-grey1"
                             >
-                                <Ellipsis size={22} />
+                                <Ellipsis size={20} />
                             </button>
                         )}
 
@@ -314,40 +375,6 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                 </div>
             </aside>
 
-            {showChatRail && (
-                <div className="fixed bottom-0 left-[76px] top-0 z-30 flex w-16 flex-col items-center gap-3 overflow-y-auto border-r border-primary5/50 bg-primary7 px-2 py-4">
-                    {inboxes.map(inbox => {
-                        const isActive = activeChatId === inbox.id;
-
-                        return (
-                            <button
-                                key={inbox.id}
-                                type="button"
-                                title={inbox.receiver?.username ?? "Chat"}
-                                onClick={() => router.push(`/messages/${inbox.id}`)}
-                                className={`relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 transition-colors ${
-                                    isActive
-                                        ? "border-blue-400 bg-primary2"
-                                        : "border-transparent bg-primary5 hover:border-primary3"
-                                }`}
-                            >
-                                {inbox.receiver?.image ? (
-                                    <img
-                                        src={inbox.receiver.image}
-                                        alt={inbox.receiver.username ?? "User"}
-                                        className="h-full w-full object-cover"
-                                    />
-                                ) : (
-                                    <span className="text-sm font-semibold text-grey1">
-                                        {inbox.receiver?.username?.charAt(0).toUpperCase() ?? "?"}
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
-
             {isPostOpen && (
                 <PostModel closeModel={() => setIsPostOpen(false)} />
             )}
@@ -355,8 +382,8 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
             {showPanel && (
                 <div
                     style={{
-                        left: isSmall ? 76 : sidebarWidth,
-                        width: isSmall ? "calc(100vw - 76px)" : `min(360px, calc(100vw - ${sidebarWidth}px))`
+                        left: isSmall ? 68 : sidebarWidth,
+                        width: isSmall ? "calc(100vw - 68px)" : `min(360px, calc(100vw - ${sidebarWidth}px))`
                     }}
                     className="fixed bottom-0 top-0 z-30 overflow-hidden border-r border-primary5/50 bg-primary7 shadow-2xl transition-[left,width] duration-300 ease-in-out"
                 >
