@@ -104,8 +104,15 @@ export default function MessageSubFooter({
               status: "sent" as const
           };
       }));
+        try {
         await verifyConnection();
-        socket.emit("message:send",(result.newMessage));
+        socket.emit("message:send", {
+          chatId,
+          content: result.newMessage
+          });
+        } catch (error) {
+          console.error("Socket connection failed:", error);
+        }
       }
       catch(error) {
         setMessages(prev => prev.filter(message => message?.id !== tempId));
