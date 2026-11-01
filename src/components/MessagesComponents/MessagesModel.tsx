@@ -7,7 +7,6 @@ import MessageBox from "./MessageBox";
 import { messageInboxesValue } from "@/lib/services/message";
 import EmptyChatInboxes from "../EmptyCallbacks/EmptyChatInboxes";
 import { Chat } from "@prisma/client";
-import LoadingSpinner from "../LoadingSpinner";
 import MessageInboxSkeleton from "../EmptyCallbacks/MessageInboxSkiliton";
 
 interface MessageModelProps {
