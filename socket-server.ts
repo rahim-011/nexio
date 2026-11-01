@@ -42,14 +42,19 @@ app.get("/users/:userId/status",(req,res) =>{
 })
 
 
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "http://localhost:3000",
+    "https://z3gz75vs-3001.uks1.devtunnels.ms",
+].filter((origin): origin is string => Boolean(origin))
+ .map(origin => origin.replace(/\/$/, ""));
+
 const io = new Server(httpServer, {
     cors: {
-        origin: ["http://localhost:3000",
-            "https://z3gz75vs-3001.uks1.devtunnels.ms/"
-        ],
-        credentials:true, // accept the cookies from the front
+        origin: allowedOrigins,
+        credentials: true, // accept the cookies from the front
     },
-    transports: ["websocket", "polling"]
+    transports: ["websocket", "polling"],
 });
 
 // using auth to verify the authentication of the user that want to join the socket
@@ -164,8 +169,10 @@ io.on("connection", (socket) => {
     // we did user the io. cause its a message that can be sent to all users in that chat (deffrent sockets not just this socket that we are already in with the connection event)
 });
 
-httpServer.listen(3001, () => {
-    console.log("Socket.IO server running on port 3001");
+const PORT = Number(process.env.PORT) || 3001;
+
+httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`Socket.IO server running on port ${PORT}`);
 });
 
 
