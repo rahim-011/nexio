@@ -20,12 +20,11 @@ export default function MainLayoutClient({
     const isSettingsPage = pathname.startsWith("/settings");
     const isAddFriendsPage = pathname === "/add-friends";
     const isRequestsPage = pathname === "/requests";
-    const isEditProfilePage = pathname === "/settings/edit-profile";
 
     const isFixedHeightPage =
         isAddFriendsPage ||
         isRequestsPage ||
-        isEditProfilePage;
+        isSettingsPage;
 
     const isChatPage =
         pathname.startsWith("/messages/") && pathname !== "/messages";
@@ -43,7 +42,7 @@ export default function MainLayoutClient({
             <div
                 className={`min-w-0 bg-primary7 ${
                     isFixedHeightPage
-                        ? "h-dvh overflow-hidden"
+                        ? "flex h-dvh min-h-0 flex-col overflow-hidden"
                         : "min-h-screen"
                 } ${
                     isSettingsPage
@@ -53,7 +52,7 @@ export default function MainLayoutClient({
                             : "ml-[68px]"
                 }`}
             >
-                <div className={isChatPage ? "max-[1280px]:hidden" : ""}>
+                <div className={`shrink-0 ${isChatPage ? "max-[1280px]:hidden" : ""}`}>
                     <NavBar />
                 </div>
 
@@ -62,7 +61,7 @@ export default function MainLayoutClient({
                         isChatPage
                             ? "h-dvh min-h-0 overflow-hidden max-[1280px]:fixed max-[1280px]:inset-0"
                             : isFixedHeightPage
-                                ? "h-[calc(100dvh-64px)] min-h-0 overflow-hidden"
+                                ? "min-h-0 flex-1 overflow-hidden"
                                 : "min-h-[calc(100dvh-64px)]"
                     }`}
                 >

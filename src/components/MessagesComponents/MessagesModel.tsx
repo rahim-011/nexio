@@ -7,14 +7,18 @@ import MessageBox from "./MessageBox";
 import { messageInboxesValue } from "@/lib/services/message";
 import EmptyChatInboxes from "../EmptyCallbacks/EmptyChatInboxes";
 import { Chat } from "@prisma/client";
+import LoadingSpinner from "../LoadingSpinner";
+import MessageInboxSkeleton from "../EmptyCallbacks/MessageInboxSkiliton";
 
 interface MessageModelProps {
     onClose: () => void,
     inboxes: messageInboxesValue[],
     onDelete: (targetId: Chat['id']) => void,
+    onUpdate: (targetId: Chat['id']) => void,
+    isInboxesLoading: boolean
 }
 
-export default function MessagesModel({ onClose, inboxes, onDelete }: MessageModelProps) {
+export default function MessagesModel({ onClose, inboxes, onDelete ,onUpdate,isInboxesLoading}: MessageModelProps) {
     const { cachedUserInfos } = useUserStore();
     const { username } = cachedUserInfos;
     return (
@@ -42,7 +46,9 @@ export default function MessagesModel({ onClose, inboxes, onDelete }: MessageMod
 
                 <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-4 sm:px-3">
                     <div className="flex min-w-0 flex-col items-stretch gap-1">
-                        {inboxes.length === 0 ? (
+                        {isInboxesLoading ? (
+                            <MessageInboxSkeleton />
+                        ) : inboxes.length === 0 ? (
                             <EmptyChatInboxes />
                         ) : (
                             inboxes.map(inbox => (
@@ -50,6 +56,7 @@ export default function MessagesModel({ onClose, inboxes, onDelete }: MessageMod
                                     key={inbox.id}
                                     inboxInfos={inbox}
                                     onDelete={onDelete}
+                                    onUpdate={onUpdate}
                                 />
                             ))
                         )}

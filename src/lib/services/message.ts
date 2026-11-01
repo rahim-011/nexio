@@ -6,6 +6,7 @@ import { verifyUserSession } from "./verifications";
 import { getCurrentUser } from "./user";
 import { MessageFormValue } from "@/components/MessagesComponents/MessageSubFooter";
 import { messageSchema } from "@/schemas/chatSchema";
+import { messageLimiter } from "../rate-limit";
 
 
 
@@ -304,6 +305,13 @@ export async function createNewMessage(values:MessageFormValue){
     try{
         const session = await verifyUserSession();
         const userId = session.user.id;
+        const {success} = await messageLimiter.limit(userId);
+        if(!success){
+            return{
+                success:false,
+                error:'Too many messages requests,please try again!'
+            }
+        }
         const validation = messageSchema.safeParse(values);
         if (!validation.success){
             throw new Error('Invalid form data!')
@@ -363,26 +371,38 @@ export type newMessageValue = NonNullable<
 
 export async function updateChatInbox(chatId:Chat['id']){
     try{
-        await verifyUserSession();
+        const session = await verifyUserSession();
+        const userId = session.user.id;
         const existingChat = await prisma.chat.findUnique({
             where:{
-                id:chatId
+                id:chatId,
+                participants:{
+                    has:userId
+                }
             },
             select:{
-                messages:{orderBy:{createdAt:'desc'},take:1}
+                id:true
             }
         })
         if (!existingChat){
             throw new Error('Invalid request!')
         };
-        await prisma.message.update({
+        const result = await prisma.message.updateMany({
             where:{
-                id: existingChat.messages[0].id
+                chatId,
+                OR:[
+                    {readAt:null},
+                    {readAt:{isSet:false}}
+                ],
+                senderId:{
+                    not: userId
+                }
             },
             data:{
                 readAt: new Date()
             }
         })
+        console.log("Updated messages:", result.count);
         return{
             success:true,
             message:'Chat inbox status has been updated successfully!'

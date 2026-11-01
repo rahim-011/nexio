@@ -22,3 +22,16 @@ export const signInSchema = z.object({
                     .min(8, "Password must be at least 8 characters")
                     .regex(/^[A-Za-z0-9@$!%*?&]+$/, "Invalid characters"),
 })
+
+
+export const resetPasswordSchema = z.object({
+    newPassword: z.string()
+        .min(8, "Password must be at least 8 characters")
+        .regex(/^[A-Za-z0-9@$!%*?&]+$/, "Invalid characters"),
+    confirmNewPassword: z.string()
+        .min(8, "Password must be at least 8 characters")
+        .regex(/^[A-Za-z0-9@$!%*?&]+$/, "Invalid characters"),
+}).refine((data) => data.confirmNewPassword === data.newPassword,{
+    path:['confirmNewPassword'],
+    message:'Passwords do not match'
+})

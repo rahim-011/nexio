@@ -116,4 +116,34 @@ export const auth = betterAuth({
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         },
     },
+
+
+    // rate limiting to protect pages from spam requests!
+    rateLimit: {
+        enabled: true,
+        window: 60,
+        max: 100,
+        customRules: {
+            "/sign-in/email": {
+                window: 60,
+                max: 10,
+            },
+            "/sign-up/email": {
+                window: 60,
+                max: 5,
+            },
+            "/email-otp/send-verification-otp": {
+                window: 600,
+                max: 3,
+            },
+            "/email-otp/verify-email": {
+                window: 300,
+                max: 5,
+            },
+            "/email-otp/reset-password": {
+                window: 300,
+                max: 5,
+            },
+        },
+    },
 });

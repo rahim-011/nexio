@@ -12,7 +12,9 @@ import { EditProfileFormValues } from "@/components/SettingsComponents/EditProfi
 import { PfpValue } from "@/components/ProfileComponents/ChangePfp";
 import { EditEmailValue } from "@/components/SettingsComponents/EditEmailForm";
 import { User } from "@prisma/client";
-
+import { ResetPasswordValues } from "@/components/SettingsComponents/ResetPasswordForm";
+import { resetPasswordSchema } from "@/schemas/authSchema";
+import bcrypt from 'bcryptjs'
 
 
 
@@ -361,4 +363,6 @@ export async function getUserProfileInfos(username:User['username']){
         }
     }
 }
+
+
 

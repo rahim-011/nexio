@@ -87,16 +87,23 @@ export default function MessageSubFooter({
       setImages([]);
       try {
         const result = await createNewMessage({chatId,content:values.content,media:values.media});
-        if (!result.success){
+        if (!result.success || !result.newMessage){
             toast.error('Failed to submit message!');
             setMessages(prev => prev.filter(message => message?.id != tempId));
             return;
         }
-        setMessages(prev => prev.map(message => (
-          message.id === tempId ? {...result.newMessage,sender:{
-            username: message.sender.username
-          },status:"sent"} : message
-        )))
+        setMessages(prev => prev.map(message => {
+          if (message.id !== tempId) return message;
+          return {
+              ...message,
+              ...result.newMessage,
+              isMine: true,
+              sender: {
+                  username: result.newMessage.sender.username
+              },
+              status: "sent" as const
+          };
+      }));
         await verifyConnection();
         socket.emit("message:send",(result.newMessage));
       }

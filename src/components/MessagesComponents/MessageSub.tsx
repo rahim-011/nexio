@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState,useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import MessageSubMain from "./MessageSubMain";
 import MessageSubFooter from "./MessageSubFooter";
-import {  getLatestMessages, newMessageValue } from "@/lib/services/message";
-import { Chat, User } from "@prisma/client";
+import { getLatestMessages, newMessageValue } from "@/lib/services/message";
+import { User } from "@prisma/client";
 import { toast } from "sonner";
 import { useSocket } from "@/hooks/useSocket";
 import { socket } from "@/lib/socket";
 import { JoinChatResponse } from "../../../socket-server";
-
 
 export type DisplayMessage = newMessageValue & {
     sender: {
@@ -18,67 +17,85 @@ export type DisplayMessage = newMessageValue & {
     status: "sending" | "sent";
 };
 
-export default function MessageSub({ chatId,currentUserId }: { chatId: string,currentUserId:User['id'] }) {
+export default function MessageSub({ chatId, currentUserId }: { chatId: string, currentUserId: User["id"] }) {
     const [messages, setMessages] = useState<DisplayMessage[]>([]);
+    const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
-    useSocket();   
-    
-    useEffect(()=>{
-        async function fetchMessages(){
-            try{
+
+    useSocket();
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function fetchMessages() {
+            setIsMessagesLoaded(false);
+            setMessages([]);
+
+            try {
                 const result = await getLatestMessages(chatId);
-                if (!result.success || !result.latestMessages){
-                    toast.error('Failed to fetch messages!');
+
+                if (!isMounted) return;
+
+                if (!result.success || !result.latestMessages) {
+                    toast.error("Failed to fetch messages!");
                     return;
                 }
-                setMessages(result.latestMessages)
-            }
-            catch(error){
-                toast.error('Somthing went wrong, please try again.')
+
+                setMessages(result.latestMessages);
+                setIsMessagesLoaded(true);
+            } catch (error) {
+                if (isMounted) {
+                    toast.error("Somthing went wrong, please try again.");
+                }
             }
         }
+
         fetchMessages();
-    },[chatId])
+
+        return () => {
+            isMounted = false;
+        };
+    }, [chatId]);
+
     const scrollToBottom = () => {
         const container = containerRef.current;
 
         if (container) {
             container.scrollTo({
                 top: container.scrollHeight,
-                behavior: "smooth"
+                behavior: "instant"
             });
         }
     };
-    useEffect(() => {
-        if (messages.length > 0) {
-            requestAnimationFrame(() => {
-                scrollToBottom();
-            });
-        }
-    }, [messages.length]);
 
-    //here we are joining the chat socket directly when connecting
-    useEffect(()=>{
-        const joinChat = () =>{
-            socket.emit("chat:join",chatId,(response:JoinChatResponse)=>{
-                if (!response.success){
+    //*here we are joining the chat socket directly when connecting*
+    useEffect(() => {
+        const joinChat = () => {
+            socket.emit("chat:join", chatId, (response: JoinChatResponse) => {
+                if (!response.success) {
                     console.log(response.error);
                     return;
                 }
+
                 console.log("Successfully joined chat:", chatId);
-            })
-        }
-        socket.on("connect",joinChat);
-        if (socket.connected){
+            });
+        };
+
+        socket.on("connect", joinChat);
+
+        if (socket.connected) {
             joinChat();
         }
-        return () =>{
-            socket.off("connect",joinChat);
-            if (socket.connected){
-                socket.emit("chat:leave",chatId)
+
+        return () => {
+            socket.off("connect", joinChat);
+
+            if (socket.connected) {
+                socket.emit("chat:leave", chatId);
             }
-        }
-    },[chatId])
+        };
+    }, [chatId]);
+
     return (
         <>
             <div className="min-h-0 flex-1">
@@ -88,6 +105,8 @@ export default function MessageSub({ chatId,currentUserId }: { chatId: string,cu
                     setMessages={setMessages}
                     chatId={chatId}
                     currentUserId={currentUserId}
+                    isMessagesLoaded={isMessagesLoaded}
+                    scrollToButtom={scrollToBottom}
                 />
             </div>
 
@@ -95,7 +114,7 @@ export default function MessageSub({ chatId,currentUserId }: { chatId: string,cu
                 chatId={chatId}
                 setMessages={setMessages}
                 currentUserId={currentUserId}
-                scrollToBottom={()=>scrollToBottom()}
+                scrollToBottom={scrollToBottom}
             />
         </>
     );

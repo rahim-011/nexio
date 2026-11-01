@@ -9,7 +9,7 @@ import { auth } from "./src/lib/auth";
 import { prisma } from "./src/lib/prisma";
 
 import type { newMessageValue } from "@/lib/services/message";
-import { Chat, Message, User } from "@prisma/client";
+import { Chat, User } from "@prisma/client";
 
 
 

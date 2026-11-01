@@ -1,15 +1,13 @@
 import { Alatsi, League_Spartan } from "next/font/google";
 
-
-
-
 export const leageSpartan = League_Spartan({
-    weight:['400','500','600','700','800'],
-    subsets:['latin']
-})
-
+    weight: ["400", "500", "600", "700", "800"],
+    subsets: ["latin"],
+    variable: "--font-league-spartan",
+});
 
 export const alatsi = Alatsi({
-    weight:['400'],
-    subsets:['latin']
-})
+    weight: ["400"],
+    subsets: ["latin"],
+    variable: "--font-alatsi",
+});

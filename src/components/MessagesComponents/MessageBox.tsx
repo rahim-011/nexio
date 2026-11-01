@@ -13,9 +13,10 @@ import { Chat } from "@prisma/client";
 interface MessageBoxProps {
     inboxInfos: messageInboxesValue
     onDelete: (targetId: Chat['id']) => void,
+    onUpdate: (targetId: Chat['id']) => void,
 }
 
-export default function MessageBox({ inboxInfos, onDelete }: MessageBoxProps) {
+export default function MessageBox({ inboxInfos, onDelete,onUpdate }: MessageBoxProps) {
     const [loading, setLoading] = useState<boolean>(false);
     const [UnreadStatus, setUnreadStatus] = useState<boolean>(inboxInfos.isUnread);
     const router = useRouter();
@@ -51,6 +52,8 @@ export default function MessageBox({ inboxInfos, onDelete }: MessageBoxProps) {
                 setUnreadStatus(true);
                 toast.error("Failed to update chat inbox status");
             }
+            onUpdate(inboxInfos.id);
+            
         } catch {
             setUnreadStatus(true);
             toast.error("Something went wrong, please try again.");
@@ -63,8 +66,8 @@ export default function MessageBox({ inboxInfos, onDelete }: MessageBoxProps) {
                 UnreadStatus ? "bg-primary5/30" : ""
             }`}
             onClick={() => {
-                router.push(`/messages/${inboxInfos.id}`);
                 handleUpdatingInboxStatus();
+                router.push(`/messages/${inboxInfos.id}`);
             }}
         >
             <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-1 ring-primary5/50 sm:h-12 sm:w-12">

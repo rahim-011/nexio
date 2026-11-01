@@ -1,7 +1,6 @@
 'use client'
 
 import { Bell, Ellipsis, MessageCircle, Plus, Power, Settings, User, Users } from "lucide-react";
-import { alatsi } from "@/lib/fonts";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import ProfileIcon from "./ProfileIcon";
@@ -25,6 +24,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
     useSocket();
 
     const { setUserInfos, cachedUserInfos } = useUserStore();
+    const [isInboxesLoading,setIsInboxesLoading] = useState<boolean>(false);
     const { username } = cachedUserInfos;
     const router = useRouter();
     const pathname = usePathname();
@@ -51,7 +51,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
         isMessagesPage &&
         (isSmall ? isMessagesRoot : isMessageModelOpen);
 
-    const activeChatId = isChatPage ? pathname.split("/")[2] : null;
+    
 
     useEffect(() => {
         if (userInfos) {
@@ -159,6 +159,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
     useEffect(() => {
         const fetchInboxes = async () => {
             try {
+                setIsInboxesLoading(true);
                 const res = await getAllMessagesInboxes();
 
                 if (!res.success || !res.messagesInboxes) {
@@ -169,6 +170,9 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                 setInboxes(res.messagesInboxes);
             } catch {
                 toast.error("Something went wrong, please try again.");
+            }
+            finally{
+                setIsInboxesLoading(false);
             }
         };
 
@@ -237,7 +241,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                         >
                             <div className="h-9 w-9 shrink-0 bg-current text-grey1 [mask-image:url('/chatLogo.svg')] [mask-size:contain] [mask-repeat:no-repeat]" />
 
-                            <span className={`${alatsi.className} whitespace-nowrap text-[1.8rem] text-grey1 transition-opacity duration-200 ${expanded ? "opacity-100" : "hidden opacity-0"}`}>
+                            <span className={`font-[family-name:var(--font-alatsi)] whitespace-nowrap text-[1.8rem] text-grey1 transition-opacity duration-200 ${expanded ? "opacity-100" : "hidden opacity-0"}`}>
                                 Nexio
                             </span>
                         </Link>
@@ -390,9 +394,11 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                     <MessagesModel
                         onClose={() => setIsMessageModelOpen(false)}
                         inboxes={inboxes}
+                        isInboxesLoading={isInboxesLoading}
                         onDelete={(targetId: Chat["id"]) =>
                             setInboxes(prev => prev.filter(item => item.id !== targetId))
                         }
+                        onUpdate={(targetId:Chat['id']) => setInboxes(prev => prev.map(item => item.id === targetId ? {...item,isUnread:false} : item))}
                     />
                 </div>
             )}

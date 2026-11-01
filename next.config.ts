@@ -1,14 +1,21 @@
+
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = bundleAnalyzer({
+    enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
-  images:{
-    remotePatterns:[
-      {protocol:'https',
-        hostname: 'res.cloudinary.com'
-      }
-    ]
-  },
-  allowedDevOrigins: [
+    images: {
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "res.cloudinary.com",
+            },
+        ],
+    },
+    allowedDevOrigins: [
         "z3gz75vs-3000.uks1.devtunnels.ms",
     ],
     experimental: {
@@ -20,4 +27,4 @@ const nextConfig: NextConfig = {
     },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

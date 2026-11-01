@@ -5,6 +5,7 @@ import { prisma } from "../prisma";
 import { verifyUserSession } from "./verifications";
 import { getCurrentUser } from "./user";
 import { clearUserCachedInfos } from "./user";
+import { searchLimiter } from "../rate-limit";
 
 
 
@@ -15,6 +16,13 @@ interface FiltersValues{
 export async function getFriends(filter:FiltersValues['search']){
     try{
         const session = await verifyUserSession();
+        const {success} = await searchLimiter.limit(session.user.id);
+        if (!success){
+            return{
+                success:false,
+                error:'Too many search requests, please try again.'
+            }
+        }
         const userId = session.user.id;
         const currentUser = await getCurrentUser(userId);
         if (!filter.trim()){

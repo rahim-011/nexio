@@ -48,7 +48,7 @@ export default function EditBio() {
     };
 
     return (
-        <div className="mt-3 flex flex-col gap-2 lg:mt-4 lg:max-w-[70%]">
+        <div className="mt-3 flex flex-col gap-2 lg:mt-4">
             <h3 className="text-lg font-medium text-white sm:text-[1.4rem]">Bio</h3>
 
             <FormProvider {...form}>

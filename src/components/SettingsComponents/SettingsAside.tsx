@@ -14,25 +14,25 @@ export default function SettingsAside() {
     ]
 
     return (
-        <aside className="py-6 flex flex-col gap-5">
-            <div className="flex items-center gap-3">
+        <aside className="flex h-full w-full flex-col gap-5 bg-primary9 px-5 py-6 lg:px-7">
+            <div className="flex shrink-0 items-center gap-3">
                 <button
                     type="button"
                     onClick={() => router.back()}
-                    className="rounded-lg p-2 text-grey1 hover:bg-primary5/30 transition-colors cursor-pointer"
+                    className="cursor-pointer rounded-lg p-2 text-grey1 transition-colors hover:bg-primary5/30"
                     aria-label="Go back"
                 >
                     <ArrowLeft size={23} className="mb-1"/>
                 </button>
 
-                <h1 className="text-grey1 text-[1.7rem]">Settings</h1>
+                <h1 className="text-[1.7rem] text-grey1">Settings</h1>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-1 flex-col gap-2">
                 {navLinks.map((link,index) =>{
                     const bgClass = pathname === link.path ? 'bg-primary5' : 'hover:bg-primary5/20';
                     return(
-                        <Link key={index} href={link.path} className={`text-grey1 text-[1.3rem] flex items-center gap-2 ${bgClass} hover:brightness-115 transition-all rounded-lg px-6 py-3 whitespace-nowrap`}>
+                        <Link key={index} href={link.path} className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-6 py-3 text-[1.3rem] text-grey1 transition-all hover:brightness-115 ${bgClass}`}>
                             {link.icon}
                             {link.label}
                         </Link>

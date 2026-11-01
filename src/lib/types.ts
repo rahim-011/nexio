@@ -30,3 +30,5 @@ export type ProfileLabels = 'Remove Friend' | 'Edit Profile' | 'Add Friend' | 'P
 
 
 export type LikeActions = 'like' | 'unlike'
+
+export type ResetActions = 'reset-password' | 'reset-email'

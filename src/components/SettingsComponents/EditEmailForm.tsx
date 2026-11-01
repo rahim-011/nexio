@@ -13,10 +13,11 @@ import { useUserStore } from "@/lib/store/userStore";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import LoadingSpinner from "../LoadingSpinner";
+import { ResetActions } from "@/lib/types";
 
 export type EditEmailValue = z.infer<typeof editEmailSchema>;
 
-export default function EditEmailForm() {
+export default function EditEmailForm({action}:{action:ResetActions}) {
     const [errMsg, setErrMsg] = useState<string | null>(null);
     const { cachedUserInfos } = useUserStore();
     const { email } = cachedUserInfos;
@@ -35,9 +36,8 @@ export default function EditEmailForm() {
         try {
             const { error } = await authClient.emailOtp.sendVerificationOtp({
                 email: value.email,
-                type: 'email-verification'
+                type: action === 'reset-email' ? 'email-verification' : 'forget-password'
             });
-
             if (error && error.message) {
                 setErrMsg(error.message);
                 return;
@@ -86,8 +86,8 @@ export default function EditEmailForm() {
 
                     <button
                         type="submit"
-                        disabled={!isDirty || isSubmitting}
-                        className={`${!isDirty ? 'opacity-80' : ''} mt-2 flex cursor-pointer items-center justify-center rounded-lg bg-primary5 px-5 py-2.5 text-center text-sm font-semibold text-grey1 transition-all hover:brightness-115 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-3 sm:px-6 sm:py-3 sm:text-[1.1rem] lg:max-w-[40%]`}
+                        disabled={action === 'reset-email' ? !isDirty || isSubmitting : isSubmitting}
+                        className={`${action === 'reset-email' ? (!isDirty ? 'opacity-80' : '') : '' } mt-2 flex cursor-pointer items-center justify-center rounded-lg bg-primary5 px-5 py-2.5 text-center text-sm font-semibold text-grey1 transition-all hover:brightness-115 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-3 sm:px-6 sm:py-3 sm:text-[1.1rem] lg:max-w-[40%]`}
                     >
                         {isSubmitting ? <LoadingSpinner /> : 'Submit'}
                     </button>
@@ -108,6 +108,7 @@ export default function EditEmailForm() {
                             <VerifyEmailModel
                                 newEmail={form.getValues('email')}
                                 onClose={() => setIsOpen(false)}
+                                action={action}
                             />
                         </div>
                     </div>

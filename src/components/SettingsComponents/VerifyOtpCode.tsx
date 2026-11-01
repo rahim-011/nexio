@@ -1,3 +1,5 @@
+'use client'
+
 import { otpCodeSchema } from "@/schemas/userSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, FormProvider, useForm } from "react-hook-form";
@@ -10,6 +12,8 @@ import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { changeUserEmail } from "@/lib/services/user";
 import { EditEmailValue } from "./EditEmailForm";
+import { ResetActions } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 
 
@@ -18,12 +22,14 @@ export type OtpCodeValue = z.infer<typeof otpCodeSchema>;
 interface VerifyOtpCodeProps{
     newEmail:  EditEmailValue['email']
     onClose: () => void,
+    action: ResetActions
 }
 
 
 
-export default function VerifyOtpCode({newEmail,onClose}:VerifyOtpCodeProps){
+export default function VerifyOtpCode({newEmail,onClose,action}:VerifyOtpCodeProps){
     const [errMsg,setErrMsg] = useState<string | null>(null);
+    const router = useRouter();
     const form  = useForm({
         resolver: zodResolver(otpCodeSchema),
         defaultValues:{
@@ -34,35 +40,43 @@ export default function VerifyOtpCode({newEmail,onClose}:VerifyOtpCodeProps){
     const {formState:{isDirty,isSubmitting}} = form;
     
 
-    const onSubmit = async(value:OtpCodeValue) => {
-        try{
+    const onSubmit = async (value: OtpCodeValue) => {
+        try {
             setErrMsg('');
-            const {error} = await authClient.emailOtp.verifyEmail({
-                email:newEmail,
-                otp:value.otpCode
-            })
-            if (error && error.message){
+
+            if (action === 'reset-password') {
+                sessionStorage.setItem("resetOtp", value.otpCode);
+                sessionStorage.setItem("resetEmail", newEmail);
+
+                router.push('/reset-password');
+                return;
+            }
+
+            const { error } = await authClient.emailOtp.verifyEmail({
+                email: newEmail,
+                otp: value.otpCode
+            });
+
+            if (error && error.message) {
                 setErrMsg(error.message);
                 return;
             }
-            try{
-                const result = await changeUserEmail({email:newEmail});
-                if (!result.success && result.error){
-                    setErrMsg(result.error);
-                    return;
-                }
-                toast.success('Email has been changed successfully.');
-                form.reset();
+
+            const result = await changeUserEmail({ email: newEmail });
+
+            if (!result.success && result.error) {
+                setErrMsg(result.error);
+                return;
             }
-            catch(error){
-                toast.error('Something went wrong, please try again.');
-            }
+
+            toast.success('Email has been changed successfully.');
+            form.reset();
             onClose();
+
+        } catch {
+            toast.error('Something went wrong, please try again.');
         }
-        catch(error){
-            toast.error('Something went wrong, please try again.')
-        }
-    }
+    };
     return(
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
