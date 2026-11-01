@@ -4,7 +4,7 @@ import { adminClient, emailOTPClient, twoFactorClient } from "better-auth/client
 
 
 export const authClient = createAuthClient({
-    baseURL: typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL,
+    baseURL: typeof window !== "undefined" ? window.location.origin : process.env.APP_URL,
     plugins: [
         adminClient(),
         emailOTPClient(),
