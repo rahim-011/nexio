@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -53,7 +54,7 @@ export default function MessageBubble({
         <div className={`flex w-full ${isMine ? "justify-end" : "justify-start"}`}>
             <div className={`group relative flex w-fit max-w-[98%] items-end gap-2 sm:max-w-[90%] lg:max-w-[85%] ${isMine ? "flex-row-reverse" : "flex-row"}`}>
                 <div
-                    className={`relative min-w-[120px] max-w-full rounded-[20px] px-3 py-2.5 sm:min-w-[170px] sm:px-6 sm:py-4  ${
+                    className={`relative min-w-[120px] max-w-full rounded-[20px] px-3 pb-8 pt-2.5 sm:min-w-[170px] sm:px-6 sm:pb-9 sm:pt-4 ${
                         isMine
                             ? "rounded-br-[5px] bg-[#2563eb] text-white"
                             : "rounded-bl-[5px] border border-[#3b4b5e] bg-[#263445] text-[#e2e8f0]"
@@ -81,7 +82,7 @@ export default function MessageBubble({
                         </div>
                     )}
 
-                    <div className="mt-2 flex items-center justify-end gap-1">
+                    <div className="absolute bottom-2 right-3 flex items-center gap-1">
                         <span className={`text-[11px] ${isMine ? "text-blue-100/80" : "text-slate-400"}`}>
                             {createdTime}
                         </span>
