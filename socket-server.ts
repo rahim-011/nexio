@@ -179,7 +179,21 @@ io.on("connection", (socket) => {
             
            
             await socket.join(chatId);
-
+            await prisma.message.updateMany({
+                where:{
+                    chatId,
+                    OR:[
+                        {readAt:{isSet:false}},
+                        {readAt:null}
+                    ],
+                    senderId:{
+                        not: userId
+                    }
+                },
+                data:{
+                    readAt: new Date()
+                }
+            })
             console.log(`User ${userId} joined chat ${chatId}`);
 
             ack?.({ success: true });
@@ -212,6 +226,19 @@ io.on("connection", (socket) => {
             if (!existingChat.participants.includes(userId)) {
                 throw new Error("Unauthorized");
             }
+            const existingMessage = await prisma.message.findUnique({
+                where: {
+                    id: data.id
+                }
+            });
+
+            if (
+                !existingMessage ||
+                existingMessage.chatId !== chatId ||
+                existingMessage.senderId !== userId
+            ) {
+                throw new Error("Invalid message");
+            }
 
             const receiverId = existingChat.participants.find(id => id !== userId);
             if (!receiverId){
@@ -219,8 +246,9 @@ io.on("connection", (socket) => {
             }
             const roomSockets = await io.in(chatId).fetchSockets();
             const isReceiverInChat = roomSockets.some(roomSocket => roomSocket.data.user.id === receiverId);
-            const readAt = new Date();
+            let formattedData = data;
             if (isReceiverInChat){
+                const readAt = new Date();
                 await prisma.message.updateMany({
                     where:{
                         id: data.id,
@@ -229,11 +257,12 @@ io.on("connection", (socket) => {
                         readAt
                     }
                 })
+                formattedData = {
+                    ...data,
+                    readAt
+                }
             }
-            const formattedData = {
-                ...data,
-                readAt
-            }
+            
             io.to(chatId).emit("message:new", formattedData);
 
             if (receiverId) {
