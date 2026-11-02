@@ -50,7 +50,8 @@ export async function getAllMessagesInboxes(){
                         sender:{
                             select:{
                                 username:true,
-                                id:true
+                                id:true,
+                                image:true
                             }
                         }
                     }
@@ -339,7 +340,8 @@ export async function createNewMessage(values:MessageFormValue){
             include:{
                 sender:{
                     select:{
-                        username:true
+                        username:true,
+                        image:true
                     }
                 }
             }
@@ -449,7 +451,8 @@ export async function getPreviousMessages(chatId:Chat['id'],cursor:Date){
             include:{
                 sender:{
                     select:{
-                        username:true
+                        username:true,
+                        image:true,
                     }
                 }
             }
@@ -500,7 +503,8 @@ export async function getLatestMessages(chatId:Chat['id']){
             include:{
                 sender:{
                     select:{
-                        username:true
+                        username:true,
+                        image:true
                     }
                 }
             }
@@ -521,6 +525,46 @@ export async function getLatestMessages(chatId:Chat['id']){
         return{
             success:false,
             error:'Somthing went wrong,please try again'
+        }
+    }
+}
+
+
+
+
+export async function countUnreadMessages(){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const messagesCount = await prisma.chat.count({
+            where:{
+                participants:{
+                    has: userId
+                },
+                messages:{
+                    some:{
+                        senderId:{
+                            not:userId
+                        },
+                        OR:[
+                            {readAt:{isSet:false}},
+                            {readAt: null}
+                        ]
+                    },
+                },
+            }
+        })
+
+        return{
+            success:true,
+            messagesCount
+        }
+    }
+    catch(error){
+        console.log('Failed to get the unread messages count: ',error);
+        return{
+            success:false,
+            error:'Something went wrong on the count unread messages function'
         }
     }
 }

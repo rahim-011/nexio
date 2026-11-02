@@ -18,6 +18,7 @@ import { createChatInbox } from "@/lib/services/message";
 import { socket, verifyConnection } from "@/lib/socket";
 import { JoinChatResponse } from "../../../socket-server";
 import { useSocket } from "@/hooks/useSocket";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
 
 interface ProfileTitleProps {
     name: string | null;
@@ -36,7 +37,9 @@ export default function ProfileTitle({
     userInfos: ProfileTitleProps;
 }) {
     useSocket();
+    
 
+    const {increaseTotal,decreaseTotal} = useNotificationStore();
     const [isOpen, setIsOpen] = useState(false);
     const [isCreating, setIsCreating] = useState<boolean>(false);
     const [isSending, setIsSending] = useState<boolean>(false);
@@ -90,7 +93,7 @@ export default function ProfileTitle({
                 toast.error("Failed to send friend request.");
                 return;
             }
-
+            increaseTotal('requests');
             toast.success("Friend request has been send successfully.");
             setBtnStatus("Pending");
             router.refresh();
@@ -110,7 +113,7 @@ export default function ProfileTitle({
                 toast.error("Failed to cancel the friend request.");
                 return;
             }
-
+            decreaseTotal('requests');
             setBtnStatus("Add Friend");
             toast.success("Friend request cancelled");
         } catch (error) {
@@ -134,7 +137,6 @@ export default function ProfileTitle({
             await verifyConnection();
 
             socket.emit("chat:join", chatId, ((response: JoinChatResponse) => {
-                console.log(response);
 
                 if (!response.success) {
                     toast.error("Failed to join conversation!,please try again.");

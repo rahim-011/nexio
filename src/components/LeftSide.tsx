@@ -15,15 +15,20 @@ import { getAllMessagesInboxes, messageInboxesValue, newMessageValue } from "@/l
 import { Chat } from "@prisma/client";
 import { useSocket } from "@/hooks/useSocket";
 import { socket } from "@/lib/socket";
+import NotificationCircle from "./NotificationCircle";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
 
 interface LeftSideProps {
     userInfos: userInfos | null
+    requestsCount: number
+    messagesCount: number
 }
 
-export default function LeftSide({ userInfos }: LeftSideProps) {
+export default function LeftSide({ userInfos, requestsCount,messagesCount }: LeftSideProps) {
     useSocket();
 
     const { setUserInfos, cachedUserInfos } = useUserStore();
+    const {increaseTotal} = useNotificationStore();
     const [isInboxesLoading,setIsInboxesLoading] = useState<boolean>(false);
     const { username } = cachedUserInfos;
     const router = useRouter();
@@ -51,7 +56,7 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
         isMessagesPage &&
         (isSmall ? isMessagesRoot : isMessageModelOpen);
 
-    
+
 
     useEffect(() => {
         if (userInfos) {
@@ -94,6 +99,11 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
 
     useEffect(()=>{
         const handleNewInboxMessage = (newMessage:newMessageValue) =>{
+            const isUnread = newMessage.readAt === undefined;
+            const hasUnreadMessages = inboxes.some(inbox => inbox.messages.some(message => message.readAt === undefined));
+            if (!hasUnreadMessages && isUnread){
+                increaseTotal('messages');
+            }
             setInboxes(prev => {
                 const updatedInbox = prev.find(inbox => inbox.id === newMessage.chatId);
                 if (!updatedInbox) return prev;
@@ -296,7 +306,12 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                                                 : "text-grey3 hover:bg-primary6 hover:text-grey1"
                                         }`}
                                     >
-                                        {link.icon}
+                                        <span className="relative flex shrink-0 items-center justify-center">
+                                            {link.icon}
+                                            <span className="absolute -right-2 -top-1">
+                                                <NotificationCircle value={messagesCount} />
+                                            </span>
+                                        </span>
                                         <span className={`whitespace-nowrap ${expanded ? "block" : "hidden"}`}>
                                             {link.label}
                                         </span>
@@ -311,7 +326,14 @@ export default function LeftSide({ userInfos }: LeftSideProps) {
                                     title={!expanded ? link.label : undefined}
                                     className={itemClass}
                                 >
-                                    {link.icon}
+                                    {link.label === "Requests" ? (
+                                        <span className="relative flex shrink-0 items-center justify-center">
+                                            {link.icon}
+                                            <span className="absolute -right-2 -top-1">
+                                                <NotificationCircle value={requestsCount} />
+                                            </span>
+                                        </span>
+                                    ) : link.icon}
                                     <span className={`whitespace-nowrap ${expanded ? "block" : "hidden"}`}>
                                         {link.label}
                                     </span>

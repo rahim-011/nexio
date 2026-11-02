@@ -142,20 +142,24 @@ export default function MessageSubMain({
                     if (!message) return null;
 
                     return (
-                        <MessageBubble
-                            key={message.id}
-                            readAt={message.readAt}
-                            messageId={message.id}
-                            onDelete={() =>
-                                setMessages(prev =>
-                                    prev.filter(prevMessage => prevMessage.id !== message.id)
-                                )
-                            }
-                            isMine={currentUserId === message.senderId}
-                            createdTime={message.createdAt ? getPostedTime(message.createdAt) : ""}
-                            media={message.images}
-                            content={message.content}
-                        />
+                        
+                    <MessageBubble
+                        key={message.id}
+                        readAt={message.readAt}
+                        messageId={message.id}
+                        onDelete={() =>
+                            setMessages(prev =>
+                                prev.filter(prevMessage => prevMessage.id !== message.id)
+                            )
+                        }
+                        isMine={currentUserId === message.senderId}
+                        createdTime={message.createdAt ? getPostedTime(message.createdAt) : ""}
+                        media={message.images}
+                        content={message.content}
+                        username={message.sender.username}
+                        userImage={message.sender.image}
+                    />
+
                     );
                 })}
             </div>

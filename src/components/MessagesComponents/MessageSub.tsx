@@ -9,16 +9,19 @@ import { toast } from "sonner";
 import { useSocket } from "@/hooks/useSocket";
 import { socket } from "@/lib/socket";
 import { JoinChatResponse } from "../../../socket-server";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
 
 export type DisplayMessage = newMessageValue & {
     sender: {
         username: string;
+        image: string | null
     };
     status: "sending" | "sent";
 };
 
 export default function MessageSub({ chatId, currentUserId }: { chatId: string, currentUserId: User["id"] }) {
     const [messages, setMessages] = useState<DisplayMessage[]>([]);
+    const {decreaseTotal} = useNotificationStore();
     const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -77,6 +80,10 @@ export default function MessageSub({ chatId, currentUserId }: { chatId: string, 
                     return;
                 }
                 setMessages(prev => prev.map(message => message.readAt === null ? {...message,readAt: new Date()} : message));
+                const hasUnreadMessages = messages.some(message => message.readAt == undefined);
+                if (hasUnreadMessages){
+                    decreaseTotal('messages');
+                }
                 console.log("Successfully joined chat:", chatId);
             });
         };

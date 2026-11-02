@@ -323,6 +323,31 @@ export async function cancelFriendRequest(receiverId:User['id']){
 
 
 
+export async function countUnacceptRequests(){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const requestsCount = await prisma.requests.count({
+            where:{
+                status:'pending',
+                receiverId: userId
+            } 
+        })
+        return{
+            success:true,
+            requestsCount
+        }
+    }
+    catch(error){
+        console.log('Failed to get count of unaccept requests!');
+        return{
+            success:false,
+            error:'Somthing went worng on get unaccept count requests function!'
+        }
+    }
+}
+
+
 
 
 

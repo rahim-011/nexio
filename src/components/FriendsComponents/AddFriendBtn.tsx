@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import LoadingSpinner from "../LoadingSpinner";
 import { FriendStatus } from "@/lib/types";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
 
 interface AddFriendProps {
     receiverId: User["id"];
@@ -16,6 +17,7 @@ interface AddFriendProps {
 
 export default function AddFriendBtn({ receiverId, requestStatus, requestId }: AddFriendProps) {
     const router = useRouter();
+    const {increaseTotal,decreaseTotal} = useNotificationStore();
     const [btnStatus, setBtnStatus] = useState<string>(requestStatus || "add friend");
     const [isPending, setIsPending] = useState<boolean>(false);
 
@@ -38,6 +40,7 @@ export default function AddFriendBtn({ receiverId, requestStatus, requestId }: A
                     toast.error("Failed to cancel the friend request.");
                     return;
                 }
+                decreaseTotal('requests');
                 setBtnStatus("add friend");
                 toast.success("Friend request cancelled");
             } else {
@@ -49,6 +52,7 @@ export default function AddFriendBtn({ receiverId, requestStatus, requestId }: A
                         setBtnStatus("add friend");
                         return;
                     }
+                    increaseTotal('requests')
                     toast.success("Friend request sent!");
                     setBtnStatus("pending");
                 } else {
@@ -58,6 +62,7 @@ export default function AddFriendBtn({ receiverId, requestStatus, requestId }: A
                             toast.error("Failed to accept friend request. Please try again.");
                             return;
                         }
+                        decreaseTotal('requests');
                         toast.success("Friend request accepted!");
                         setBtnStatus("friends");
                         router.refresh();

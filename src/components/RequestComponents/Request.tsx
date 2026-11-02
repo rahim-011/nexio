@@ -7,6 +7,7 @@ import { manageFriendsActions } from "@/lib/types";
 import { manageFriendRequest } from "@/lib/services/request";
 import LoadingSpinner from "../LoadingSpinner";
 import { useRouter } from "next/navigation";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
 
 interface RequestProps {
     username: string;
@@ -15,6 +16,7 @@ interface RequestProps {
 }
 
 export default function Request({ username, avatar, requestId }: RequestProps) {
+    const {decreaseTotal} = useNotificationStore();
     const [isAccepting, setIsAccepting] = useState(false);
     const [isDeclining, setIsDeclining] = useState(false);
     const router = useRouter();
@@ -41,7 +43,7 @@ export default function Request({ username, avatar, requestId }: RequestProps) {
                 );
                 return;
             }
-
+            decreaseTotal('requests');
             toast.success(
                 action === "accept"
                     ? "Friend request accepted!"

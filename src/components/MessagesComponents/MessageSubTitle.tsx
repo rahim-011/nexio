@@ -31,7 +31,7 @@ export default function MessageSubTitle({
                     <ArrowLeft size={20} className="sm:h-[23px] sm:w-[23px]" />
                 </button>
 
-                <div className="relative h-10 w-10 shrink-0 sm:h-12 sm:w-12">
+                <div className="relative h-10 w-10 shrink-0 sm:h-12 sm:w-12 cursor-pointer" onClick={()=>router.push(`/profile/${receiverInfos.username}`)}>
                     <Image
                         src={receiverInfos.image || "/callbackAvatar.webp"}
                         alt={`${receiverInfos.username} avatar`}

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Message } from "@prisma/client";
 import { deleteMessage } from "@/lib/services/message";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface MessageBubbleProps {
     content: MessageFormValue["content"];
@@ -23,6 +24,8 @@ interface MessageBubbleProps {
     readAt: Message["readAt"];
     onDelete: () => void;
     messageId: Message["id"];
+    username: string;
+    userImage: string | null;
 }
 
 export default function MessageBubble({
@@ -33,8 +36,12 @@ export default function MessageBubble({
     status = "sent",
     readAt,
     onDelete,
-    messageId
+    messageId,
+    username,
+    userImage
 }: MessageBubbleProps) {
+    const router = useRouter();
+
     const handleDeleteMessage = async () => {
         try {
             onDelete();
@@ -53,6 +60,23 @@ export default function MessageBubble({
     return (
         <div className={`flex w-full ${isMine ? "justify-end" : "justify-start"}`}>
             <div className={`group relative flex w-fit max-w-[98%] items-end gap-2 sm:max-w-[90%] lg:max-w-[85%] ${isMine ? "flex-row-reverse" : "flex-row"}`}>
+                {!isMine && (
+                    <button
+                        type="button"
+                        onClick={() => router.push(`/profile/${username}`)}
+                        aria-label={`View ${username}'s profile`}
+                        className="size-8 shrink-0 overflow-hidden rounded-full transition hover:scale-105 sm:size-9 cursor-pointer"
+                    >
+                        <Image
+                            src={userImage || "/callbackAvatar.webp"}
+                            alt={`${username}'s avatar`}
+                            width={36}
+                            height={36}
+                            className="size-full object-cover"
+                        />
+                    </button>
+                )}
+
                 <div
                     className={`relative min-w-[120px] max-w-full rounded-[20px] px-3 pb-8 pt-2.5 sm:min-w-[170px] sm:px-6 sm:pb-9 sm:pt-4 ${
                         isMine

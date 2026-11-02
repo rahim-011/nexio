@@ -9,6 +9,7 @@ import { getPostedTime } from "@/lib/utils";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Chat } from "@prisma/client";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
 
 interface MessageBoxProps {
     inboxInfos: messageInboxesValue
@@ -17,6 +18,7 @@ interface MessageBoxProps {
 }
 
 export default function MessageBox({ inboxInfos, onDelete,onUpdate }: MessageBoxProps) {
+    const {decreaseTotal} = useNotificationStore();
     const [loading, setLoading] = useState<boolean>(false);
     const [UnreadStatus, setUnreadStatus] = useState<boolean>(inboxInfos.isUnread);
     const router = useRouter();
@@ -30,7 +32,7 @@ export default function MessageBox({ inboxInfos, onDelete,onUpdate }: MessageBox
                 toast.error("Failed to delete conversation. Please try again");
                 return;
             }
-
+            decreaseTotal('messages');
             onDelete(inboxInfos.id);
             toast.success("Conversation deleted successfully");
         } catch {
@@ -52,6 +54,7 @@ export default function MessageBox({ inboxInfos, onDelete,onUpdate }: MessageBox
                 setUnreadStatus(true);
                 toast.error("Failed to update chat inbox status");
             }
+            decreaseTotal('messages');
             onUpdate(inboxInfos.id);
             
         } catch {

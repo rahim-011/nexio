@@ -70,7 +70,8 @@ export default function MessageSubFooter({
           content: values.content,
           senderId: currentUserId,
           sender:{
-            username: cachedUserInfos.username
+            username: cachedUserInfos.username,
+            image:cachedUserInfos.avatar ?? '/callbackAvatar.webp',
           },
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -99,7 +100,8 @@ export default function MessageSubFooter({
               ...result.newMessage,
               isMine: true,
               sender: {
-                  username: result.newMessage.sender.username
+                  username: result.newMessage.sender.username,
+                  image: result.newMessage.sender.image ?? '/callbackAvatar.webp'
               },
               status: "sent" as const
           };

@@ -5,17 +5,31 @@ import { usePathname } from "next/navigation";
 import LeftSide from "@/components/LeftSide";
 import NavBar from "@/components/NavBar";
 import { userInfos } from "@/lib/types";
+import { useNotificationStore } from "@/lib/store/useNotificationStore";
+import { useEffect } from "react";
 
 interface MainLayoutClientProps {
     children: React.ReactNode;
     userInfos: userInfos | null;
+    requestsCount: number;
+    messagesCount: number
+
+
 }
 
 export default function MainLayoutClient({
     children,
     userInfos,
+    requestsCount,
+    messagesCount
 }: MainLayoutClientProps) {
+    const {setTotalRequests,setTotalMessages,totalRequests,totalMessages} = useNotificationStore();
+     useEffect(() => {
+        setTotalRequests(requestsCount);
+        setTotalMessages(messagesCount);
+    }, [requestsCount, messagesCount, setTotalRequests, setTotalMessages]);
     const pathname = usePathname();
+
 
     const isSettingsPage = pathname.startsWith("/settings");
     const isAddFriendsPage = pathname === "/add-friends";
@@ -37,7 +51,7 @@ export default function MainLayoutClient({
                     : "min-h-screen"
             }`}
         >
-            {!isSettingsPage && <LeftSide userInfos={userInfos} />}
+            {!isSettingsPage && <LeftSide userInfos={userInfos} requestsCount={totalRequests || 0} messagesCount={totalMessages || 0}/>}
 
             <div
                 className={`min-w-0 bg-primary7 ${
