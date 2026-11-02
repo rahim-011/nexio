@@ -214,29 +214,30 @@ io.on("connection", (socket) => {
             }
 
             const receiverId = existingChat.participants.find(id => id !== userId);
-
+            if (!receiverId){
+                throw new Error('Receiver id does not exist!')
+            }
             const roomSockets = await io.in(chatId).fetchSockets();
             const isReceiverInChat = roomSockets.some(roomSocket => roomSocket.data.user.id === receiverId);
+            const readAt = new Date();
             if (isReceiverInChat){
                 await prisma.message.updateMany({
                     where:{
-                        chatId,
-                        senderId: {not: userId},
-                        OR:[
-                            {readAt:{isSet:false}},
-                            {readAt: null}
-                        ]
+                        id: data.id,
                     },
                     data:{
-                        readAt: new Date()
+                        readAt
                     }
                 })
             }
-
-            io.to(chatId).emit("message:new", data);
+            const formattedData = {
+                ...data,
+                readAt
+            }
+            io.to(chatId).emit("message:new", formattedData);
 
             if (receiverId) {
-                io.to(`user:${receiverId}`).emit("inbox:message:new", data);
+                io.to(`user:${receiverId}`).emit("inbox:message:new",formattedData);
             }
         } catch (error) {
             console.log("Failed to send message: ", error);
