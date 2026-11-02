@@ -22,7 +22,8 @@ interface SearchBarProps {
 export default function SearchBar({
     placeHolder,
     searchType,
-    filtredFriends = []
+    filtredFriends = [],
+
 }: SearchBarProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { clearCurrentMessage } = useChatStore();
@@ -121,8 +122,8 @@ export default function SearchBar({
                     ) : searchType === "chat" ? (
                         /**The key here is a dynamic value that will be changed soon into a key map where i can controll which field i am selecting */                        
                         <>
-                            {Array.from({ length: 5 }).map((_, index) => (
-                                <AddNewMessage index={index} key={index} />
+                            {filtredFriends.length === 0 ? <EmptySearchResult/> : filtredFriends.map((friend, index) => (
+                                <AddNewMessage index={index} key={index} friend={friend}/>
                             ))}
                         </>
                     ) : searchType === "all" ? (

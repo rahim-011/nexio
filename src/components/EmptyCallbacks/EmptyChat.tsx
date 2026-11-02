@@ -4,8 +4,9 @@ import { Send } from "lucide-react";
 import { useState } from "react";
 import Overlay from "../Overlay";
 import NewMessageModel from "../ChatComponents/NewMessageModel";
+import { FilteredFriendsValues } from "@/lib/services/friend";
 
-export default function EmptyChat() {
+export default function EmptyChat({filtredFriends}:{filtredFriends:FilteredFriendsValues[]}) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -34,7 +35,7 @@ export default function EmptyChat() {
             {isOpen && (
                 <div>
                     <Overlay closeModel={() => setIsOpen(false)} />
-                    <NewMessageModel closeModel={() => setIsOpen(false)} />
+                    <NewMessageModel closeModel={() => setIsOpen(false)} filtredFriends={filtredFriends}/>
                 </div>
             )}
         </div>

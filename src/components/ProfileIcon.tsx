@@ -8,14 +8,16 @@ interface ProfileIconProps {
     avatar?: string | null
     username?: string
     onClose?: () => void
-    expanded?: boolean
+    expanded?: boolean;
+    redirect?: boolean;
 }
 
 export default function ProfileIcon({
     username,
     avatar,
     onClose,
-    expanded = true
+    expanded = true,
+    redirect
 }: ProfileIconProps) {
     const { cachedUserInfos } = useUserStore();
     const mainUserAvatar = cachedUserInfos.avatar || '/callbackAvatar.webp';
@@ -30,10 +32,7 @@ export default function ProfileIcon({
             type="button"
             title={!expanded ? finalUsername : undefined}
             className={`flex min-w-0 items-center overflow-hidden text-left ${expanded ? 'flex-1 gap-2' : 'w-9 shrink-0 justify-center'}`}
-            onClick={() => {
-                onClose?.();
-                router.push(`/profile/${finalUsername}`);
-            }}
+            onClick={redirect ? ()=> {onClose;router.push(`/profile/${finalUsername}`)} : undefined}
         >
             <Image
                 alt="user logo"

@@ -163,7 +163,6 @@ io.on("connection", (socket) => {
 
         try {
             const userId = socket.data.user.id;
-
             const chat = await prisma.chat.findUnique({
                 where: {
                     id: chatId
@@ -177,7 +176,8 @@ io.on("connection", (socket) => {
                 ack?.({ success: false, error: "Unauthorized" });
                 return;
             }
-
+            
+           
             await socket.join(chatId);
 
             console.log(`User ${userId} joined chat ${chatId}`);
@@ -214,6 +214,24 @@ io.on("connection", (socket) => {
             }
 
             const receiverId = existingChat.participants.find(id => id !== userId);
+
+            const roomSockets = await io.in(chatId).fetchSockets();
+            const isReceiverInChat = roomSockets.some(roomSocket => roomSocket.data.user.id === receiverId);
+            if (isReceiverInChat){
+                await prisma.message.updateMany({
+                    where:{
+                        chatId,
+                        senderId: {not: userId},
+                        OR:[
+                            {readAt:{isSet:false}},
+                            {readAt: null}
+                        ]
+                    },
+                    data:{
+                        readAt: new Date()
+                    }
+                })
+            }
 
             io.to(chatId).emit("message:new", data);
 

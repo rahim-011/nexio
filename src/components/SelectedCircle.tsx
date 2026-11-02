@@ -5,7 +5,7 @@ import { useChatStore } from "@/lib/store/chatStore";
 
 export default function SelectedCircle({index}:{index:number | null}){
     const {currentMessageIndex} = useChatStore();
-        const isActive = currentMessageIndex === index;
+    const isActive = currentMessageIndex === index;
     const circleBgClass = isActive ? 'bg-primary1' : 'bg-transparent';
     
     return(

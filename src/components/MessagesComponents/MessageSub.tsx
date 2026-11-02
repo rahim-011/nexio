@@ -76,7 +76,7 @@ export default function MessageSub({ chatId, currentUserId }: { chatId: string, 
                     console.log(response.error);
                     return;
                 }
-
+                setMessages(prev => prev.map(message => message.readAt === undefined ? {...message,readAt: new Date()} : message))
                 console.log("Successfully joined chat:", chatId);
             });
         };

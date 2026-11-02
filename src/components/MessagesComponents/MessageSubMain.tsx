@@ -56,6 +56,8 @@ export default function MessageSubMain({
         };
     }, [setMessages,currentUserId]);
 
+
+    //this is used to indicate that if user received a message and his reading the previous one he got notifated by an under arrow!
     useEffect(() => {
         if (newMessageReceived) {
             setShowScrollArrow(true);
@@ -66,7 +68,7 @@ export default function MessageSubMain({
         if (isMessagesLoaded) {
             scrollToButtom();
         }
-    }, [isMessagesLoaded, scrollToButtom]);
+    }, [isMessagesLoaded]);
 
     const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
         const { scrollTop } = e.currentTarget;
