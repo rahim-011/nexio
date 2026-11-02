@@ -83,7 +83,9 @@ export default function LeftSide({ userInfos, requestsCount,messagesCount }: Lef
                                 createdAt: newMessage.createdAt,
                                 sender: {
                                     id: newMessage.senderId,
-                                    username: newMessage.sender.username
+                                    username: newMessage.sender.username,
+                                    image: newMessage.sender.image ?? '/callbackAvatar.webp'
+                                
                                 }
                             }]
                         }
@@ -118,7 +120,8 @@ export default function LeftSide({ userInfos, requestsCount,messagesCount }: Lef
                         createdAt: newMessage.createdAt,
                         sender: {
                             id: newMessage.senderId,
-                            username: newMessage.sender.username
+                            username: newMessage.sender.username,
+                            image: newMessage.sender.image || '/callbackAvatar.webp'
                         }   
                         }
                     ]
