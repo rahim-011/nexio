@@ -36,15 +36,32 @@ export default function MessageSubMain({
     const [newMessageReceived,setNewMessageReceived] = useState<boolean>(false);
     useEffect(() => {
         const handleNewMessages = (newMessage: newMessageValue) => {
-            setMessages(prev =>
-                prev.some(message => message.id === newMessage.id)
-                    ? prev
-                    : [...prev, {
-                        ...newMessage,
-                        status: "sent",
-                        isMine: newMessage.senderId === currentUserId
-                    }]
-            );
+            setMessages(prev => {
+                const messageExists = prev.some(
+                    message => message.id === newMessage.id
+                    );
+
+                    if (messageExists) {
+                        return prev.map(message =>
+                            message.id === newMessage.id
+                                ? {
+                                    ...message,
+                                    ...newMessage,
+                                    isMine: message.isMine
+                                }
+                                : message
+                        );
+                    }
+
+                    return [
+                        ...prev,
+                        {
+                            ...newMessage,
+                            status: "sent",
+                            isMine: newMessage.senderId === currentUserId
+                        }
+                    ];
+                });
             if (newMessage.senderId !== currentUserId){
                 setNewMessageReceived(true);
             }

@@ -264,7 +264,6 @@ io.on("connection", (socket) => {
             }
             
             io.to(chatId).emit("message:new", formattedData);
-
             if (receiverId) {
                 io.to(`user:${receiverId}`).emit("inbox:message:new",formattedData);
             }
