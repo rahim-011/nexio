@@ -31,9 +31,9 @@ export default function MessageSubMain({
     isMessagesLoaded
 }: MessageSubMainProps) {
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+    const isAtBottomRef = useRef<boolean>(true);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [showScrollArrow, setShowScrollArrow] = useState<boolean>(false);
-    const [newMessageReceived,setNewMessageReceived] = useState<boolean>(false);
     useEffect(() => {
         const handleNewMessages = (newMessage: newMessageValue) => {
             setMessages(prev => {
@@ -62,9 +62,10 @@ export default function MessageSubMain({
                         }
                     ];
                 });
-            if (newMessage.senderId !== currentUserId){
-                setNewMessageReceived(true);
-            }
+                const shouldScroll = isAtBottomRef.current;
+                if (newMessage.senderId !== currentUserId && !shouldScroll){
+                    setShowScrollArrow(true);
+                }
         };
         socket.on("message:new", handleNewMessages);
 
@@ -72,15 +73,12 @@ export default function MessageSubMain({
             socket.off("message:new", handleNewMessages);
         };
     }, [setMessages,currentUserId]);
-
-
-    //this is used to indicate that if user received a message and his reading the previous one he got notifated by an under arrow!
     useEffect(() => {
-        if (newMessageReceived) {
-            setShowScrollArrow(true);
-            setNewMessageReceived(false);
+        if (isAtBottomRef.current) {
+            scrollToButtom();
         }
-    }, [newMessageReceived]);
+    }, [messages, scrollToButtom]);
+
     useEffect(() => {
         if (isMessagesLoaded) {
             scrollToButtom();
@@ -88,7 +86,15 @@ export default function MessageSubMain({
     }, [isMessagesLoaded]);
 
     const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
-        const { scrollTop } = e.currentTarget;
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+
+        isAtBottomRef.current = isAtBottom;
+
+        if (isAtBottom) {
+            setShowScrollArrow(false);
+        }
 
         if (scrollTop === 0 && !isLoadingMore && messages.length > 0 && hasMore) {
             setIsLoadingMore(true);
