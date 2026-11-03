@@ -11,8 +11,9 @@ import { useNotificationStore } from "@/lib/store/useNotificationStore";
 
 interface AddFriendProps {
     receiverId: User["id"];
-    requestStatus: FriendStatus;
-    requestId: Requests["id"] | undefined;
+    requestStatus: FriendStatus | 'Add Friend';
+    requestId?: Requests["id"] | undefined;
+
 }
 
 export default function AddFriendBtn({ receiverId, requestStatus, requestId }: AddFriendProps) {

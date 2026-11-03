@@ -10,13 +10,15 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "../LoadingSpinner";
 import ConfirmModel from "../ConfirmModel";
+import AddFriendBtn from "../FriendsComponents/AddFriendBtn";
 
 type FriendsModelProps = {
     onClose: () => void;
     friendsIds: User["friendsIds"];
+    isMyProfile: boolean
 };
 
-export default function FriendsModel({ onClose, friendsIds }: FriendsModelProps) {
+export default function FriendsModel({ onClose, friendsIds,isMyProfile }: FriendsModelProps) {
     const [isConfirmOpen,setIsConfirmOpen] = useState<boolean>(false);
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -140,14 +142,14 @@ export default function FriendsModel({ onClose, friendsIds }: FriendsModelProps)
                                     </div>
                                 </div>
 
-                                <button
+                                {isMyProfile  && <button
                                     type="button"
                                     onClick={() => setIsConfirmOpen(true)}
                                     className="flex shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20 hover:text-red-300 cursor-pointer"
                                 >
                                     <UserRoundMinus size={15} />
                                     Remove
-                                </button>
+                                </button>}
                                 {isConfirmOpen && <ConfirmModel isLoading={isRemoving} sub={"Are you sure you want to remove this friend? You won't be able to see them in your friends list anymore"} title={"Remove Friend"} onClose={()=>setIsConfirmOpen(false)} onConfirm={()=>handleRemoveFriend(friend.id)}/>}
                             </div>
                         ))

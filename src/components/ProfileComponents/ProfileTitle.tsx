@@ -250,8 +250,10 @@ export default function ProfileTitle({
 
             {isOpen && (
                 <FriendsModel
+                    isMyProfile={isMyProfile}
                     onClose={() => setIsOpen(false)}
                     friendsIds={userInfos.friendsIds}
+                    
                 />
             )}
         </div>
