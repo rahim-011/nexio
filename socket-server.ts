@@ -314,7 +314,7 @@ io.on("connection", (socket) => {
                     messageId: true,
                 }
             });
-
+            
             if (
                 !existingReaction ||
                 existingReaction.userId !== userId ||

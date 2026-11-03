@@ -75,14 +75,13 @@ export default function MessageSubMain({
     }, [setMessages,currentUserId]);
     useEffect(()=>{
         const handleNewMessages = (newMessage:{id:Reaction['id'],userId:User['id'],readAt: Date | null, messageId: Message['id'],emogie:string}) =>{
-            console.log("11. reaction:new received:", newMessage);
             setMessages(prev =>
                 prev.map(message =>
                     message.id === newMessage.messageId
                         ? {
                             ...message,
                             readAt: newMessage.readAt,
-                            reactions: message.reactions.some(reaction => reaction.userId === currentUserId) ? message.reactions.map(reaction => reaction.userId === currentUserId ? {
+                            reactions: message.reactions.some(reaction => reaction.userId === newMessage.userId) ? message.reactions.map(reaction => reaction.userId === newMessage.userId ? {
                                 ...reaction,
                                 emogie: newMessage.emogie
                             } : reaction) 
@@ -182,6 +181,7 @@ export default function MessageSubMain({
                                 prev.filter(prevMessage => prevMessage.id !== message.id)
                             )
                         }
+                        reactions={message.reactions}
                         currentUserId={currentUserId}
                         updateMessages={setMessages}
                         isMine={currentUserId === message.senderId}

@@ -1,6 +1,6 @@
 'use server'
 
-import { Chat, Message, User } from "@prisma/client";
+import { Chat, Message, Reaction, User } from "@prisma/client";
 import { prisma } from "../prisma";
 import { verifyUserSession } from "./verifications";
 import { getCurrentUser } from "./user";
@@ -656,6 +656,47 @@ export async function createReaction(messageId:Message['id'],emogie:string){
         return{
             success:false,
             error:'Somthing went wrong in the create reaction function, please try again!'
+        }
+    }
+}
+
+
+
+export async function deleteReaction(messageId:Message['id'],reactionId:Reaction['id']){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const existingMessage = await prisma.message.findUnique({
+            where:{
+                id:messageId
+            },
+            select:{
+                reactions:true,
+            }
+        });
+        if (!existingMessage){
+            throw new Error('Message does not exist!');
+        }
+        const existingReaction = existingMessage.reactions.find(reaction => reaction.id === reactionId && reaction.userId === userId);
+        if (!existingReaction){
+            throw new Error('Reaction does not exist!');
+        }
+        await prisma.reaction.delete({
+            where:{
+                id: reactionId,
+                userId_messageId:{userId,messageId}
+            }
+        })
+        return{
+            success:true,
+            message: 'Reaction has been deleted successfully!'
+        }
+    }
+    catch(error){
+        console.log('Failed to delete reaction: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong on delete reaction function!'
         }
     }
 }
