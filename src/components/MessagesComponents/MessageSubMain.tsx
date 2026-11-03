@@ -158,7 +158,7 @@ export default function MessageSubMain({
     return (
         <div className="relative min-h-0 h-full w-full">
             <div
-                className="flex min-h-0 h-full flex-col gap-2 overflow-y-auto px-2 py-3 sm:gap-3 sm:p-4"
+                className="flex min-h-0 h-full flex-col gap-4 overflow-y-auto px-2 py-3 sm:gap-3 sm:p-4"
                 onScroll={handleScroll}
                 ref={containerRef}
             >
