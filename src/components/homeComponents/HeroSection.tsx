@@ -17,7 +17,7 @@ export default function HeroSection() {
             </p>
 
             <button
-                className="rounded-lg bg-primary5 px-6 py-3 font-medium text-grey1 shadow-md transition-all hover:opacity-90"
+                className="rounded-lg bg-primary5 px-6 py-3 font-medium text-grey1 shadow-md transition-all hover:opacity-90 cursor-pointer"
                 onClick={() => session ? router.push('/messages') : router.push('sign-in') }
             >
                 Get Started
