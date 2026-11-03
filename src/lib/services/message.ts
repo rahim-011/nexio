@@ -53,9 +53,11 @@ export async function getAllMessagesInboxes(){
                                 id:true,
                                 image:true
                             }
-                        }
-                    }
-                }
+                        },
+                        reactions:true
+                    },
+                    
+                },
             }
         })
         const formattedInboxes = await Promise.all(
@@ -343,7 +345,8 @@ export async function createNewMessage(values:MessageFormValue){
                         username:true,
                         image:true
                     }
-                }
+                },
+                reactions:true
             }
         })
         const isMine = userId === newMessage.senderId;
@@ -454,7 +457,8 @@ export async function getPreviousMessages(chatId:Chat['id'],cursor:Date){
                         username:true,
                         image:true,
                     }
-                }
+                },
+                reactions:true
             }
         })
         const reversedMessages = loadedMessages.reverse();
@@ -506,7 +510,8 @@ export async function getLatestMessages(chatId:Chat['id']){
                         username:true,
                         image:true
                     }
-                }
+                },
+                reactions:true
             }
         })
         const reveresedMessages = latestMessages.reverse();
@@ -565,6 +570,92 @@ export async function countUnreadMessages(){
         return{
             success:false,
             error:'Something went wrong on the count unread messages function'
+        }
+    }
+}
+
+
+export async function createReaction(messageId:Message['id'],emogie:string){
+    try{
+        const session = await verifyUserSession();
+        const userId = session.user.id;
+        const existingMessage = await prisma.message.findUnique({
+            where:{
+                id: messageId
+            },
+            select:{
+                chat:{
+                    select:{
+                        participants:true
+                    }
+                },
+                reactions:{
+                    select:{
+                        emogie:true,
+                        id:true,
+                        userId:true
+                    }
+                }
+            }
+        });
+        if (!existingMessage){
+            throw new Error('Invalid request!')
+        };
+        const isMember = existingMessage.chat.participants.includes(userId);
+        if (!isMember){
+            throw new Error('Invalid request');
+        }
+        const isReactionExist = existingMessage.reactions.find(reaction => reaction.userId === userId);
+        // here find the message and its reactions for that use rand check if it has reaction to update if not create ont reaction for it!
+        let retrievedReaction;
+        if (isReactionExist){
+            retrievedReaction = await prisma.reaction.update({
+                where:{
+                    messageId,
+                    id: isReactionExist.id,
+                    userId: userId
+                },
+                data:{
+                    emogie,
+                },
+                select:{
+                    emogie:true,
+                    id:true,
+                    userId:true,
+                    messageId:true,
+                }
+            })
+            return{
+                success:true,
+                message:'Message reaction updated successfully!',
+                retrievedReaction
+            }
+        }
+        retrievedReaction = await prisma.reaction.create({
+            data:{
+                userId,
+                messageId,
+                emogie
+            },
+            select:{
+                emogie:true,
+                id:true,
+                userId: true,
+                messageId:true,
+            }
+        })
+        return{
+            success:true,
+            message:'Message reaction has been created successfully!',
+            retrievedReaction
+        }
+
+    }
+    catch(error){
+        console.log('Failed to create reaction: ',error);
+        return{
+            success:false,
+            error:'Somthing went wrong in the create reaction function, please try again!'
         }
     }
 }

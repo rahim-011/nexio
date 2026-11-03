@@ -40,7 +40,7 @@ model User {
   accounts      Account[]
   posts          Post[]
   messages      Message[]
-  otpCodes      OtpCodes[]
+  reactions Reaction[]
   sentRequests  Requests[]      @relation("SentRequests")
   receivedRequests  Requests[]  @relation("ReceivedRequests")
   comments Comment[]
@@ -165,22 +165,26 @@ model Message{
 
   sender     User   @relation(fields: [senderId], references: [id],onDelete:Cascade)
   chat       Chat   @relation(fields: [chatId],references: [id],onDelete:Cascade)
+
+  reactions Reaction[]
+
   @@index([chatId,createdAt]) // index for inhancing the query of getting the messages
 }
 
 
+model Reaction{
+  id      String  @id @default(auto())  @map("_id") @db.ObjectId
+  emogie  String
+  messageId   String  @db.ObjectId
+  userId      String  @db.ObjectId
 
-model OtpCodes{
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  hashedOtpCode     String
-  userId      String    @db.ObjectId
-  expiredAt   DateTime
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  user        User    @relation(fields: [userId], references: [id],onDelete: Cascade)
+  message     Message @relation(fields: [messageId],references: [id],onDelete:Cascade)
 
-  user        User      @relation(fields: [userId], references: [id],onDelete:Cascade)
+  @@unique([userId,messageId])
+  @@index([messageId])
+  @@index([userId])  
 }
-
 
 model Requests{
   id          String    @id @default(auto()) @map("_id") @db.ObjectId

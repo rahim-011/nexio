@@ -78,7 +78,8 @@ export default function MessageSubFooter({
           readAt: null,
           images: values.media,
           isMine: true,
-          status: "sending"
+          status: "sending",
+          reactions: []
       };
       setMessages(prev => [...prev,{...optimisticMessage,status:"sending"}]);
       requestAnimationFrame(() => {

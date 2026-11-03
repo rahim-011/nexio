@@ -6,7 +6,7 @@ import { socket } from "@/lib/socket";
 import { getPostedTime } from "@/lib/utils";
 import { getPreviousMessages, newMessageValue } from "@/lib/services/message";
 import { DisplayMessage } from "./MessageSub";
-import { Chat, User } from "@prisma/client";
+import { Chat, Message, Reaction, User } from "@prisma/client";
 import LoadingSpinner from "../LoadingSpinner";
 import { ArrowDown } from "lucide-react";
 import MessageSkeleton from "../EmptyCallbacks/MessageSkiliton";
@@ -73,6 +73,36 @@ export default function MessageSubMain({
             socket.off("message:new", handleNewMessages);
         };
     }, [setMessages,currentUserId]);
+    useEffect(()=>{
+        const handleNewMessages = (newMessage:{id:Reaction['id'],userId:User['id'],readAt: Date | null, messageId: Message['id'],emogie:string}) =>{
+            console.log("11. reaction:new received:", newMessage);
+            setMessages(prev =>
+                prev.map(message =>
+                    message.id === newMessage.messageId
+                        ? {
+                            ...message,
+                            readAt: newMessage.readAt,
+                            reactions: message.reactions.some(reaction => reaction.userId === currentUserId) ? message.reactions.map(reaction => reaction.userId === currentUserId ? {
+                                ...reaction,
+                                emogie: newMessage.emogie
+                            } : reaction) 
+                            : [...message.reactions,{
+                                emogie:newMessage.emogie,
+                                id: newMessage.id,
+                                messageId: newMessage.messageId,
+                                userId: newMessage.userId
+                            }]
+                        }
+                        : message
+                )
+            );
+        }
+        // now update the one for user socket
+        socket.on("reaction:new",handleNewMessages);
+        return () => {
+            socket.off("reaction:new",handleNewMessages)
+        }
+    },[])
     useEffect(() => {
         if (isAtBottomRef.current) {
             scrollToButtom();
@@ -152,6 +182,8 @@ export default function MessageSubMain({
                                 prev.filter(prevMessage => prevMessage.id !== message.id)
                             )
                         }
+                        currentUserId={currentUserId}
+                        updateMessages={setMessages}
                         isMine={currentUserId === message.senderId}
                         createdTime={message.createdAt ? getPostedTime(message.createdAt) : ""}
                         media={message.images}

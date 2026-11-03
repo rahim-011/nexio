@@ -12,7 +12,7 @@ import { userInfos } from "@/lib/types";
 import { useUserStore } from "@/lib/store/userStore";
 import MessagesModel from "./MessagesComponents/MessagesModel";
 import { getAllMessagesInboxes, messageInboxesValue, newMessageValue } from "@/lib/services/message";
-import { Chat } from "@prisma/client";
+import type { Chat, Message, Reaction } from "@prisma/client";
 import { useSocket } from "@/hooks/useSocket";
 import { socket } from "@/lib/socket";
 import NotificationCircle from "./NotificationCircle";
@@ -68,36 +68,7 @@ export default function LeftSide({ userInfos, requestsCount,messagesCount }: Lef
         setIsMessageModelOpen(isMessagesPage);
     }, [isMessagesPage]);
 
-    useEffect(()=>{
-        const fetchNewMessage = (newMessage: newMessageValue) => {
-            setInboxes(prev => {
-                return prev.map(inbox => (
-                    inbox.id === newMessage.chatId
-                        ? {
-                            ...inbox,
-                            messages: [{
-                                id: newMessage.id,
-                                chatId: newMessage.chatId,
-                                content: newMessage.content,
-                                readAt: newMessage.readAt,
-                                createdAt: newMessage.createdAt,
-                                sender: {
-                                    id: newMessage.senderId,
-                                    username: newMessage.sender.username,
-                                    image: newMessage.sender.image ?? '/callbackAvatar.webp'
-                                
-                                }
-                            }]
-                        }
-                        : inbox
-                ));
-            });
-        };
-        socket.on("message:new",fetchNewMessage);
-        return  () => {
-            socket.off("message:new",fetchNewMessage)
-        }
-    },[])
+    
 
     useEffect(()=>{
         const handleNewInboxMessage = (newMessage:newMessageValue) =>{
@@ -113,16 +84,17 @@ export default function LeftSide({ userInfos, requestsCount,messagesCount }: Lef
                     ...updatedInbox,
                     messages: [
                         {
-                         id: newMessage.id,
-                        chatId: newMessage.chatId,
-                        content: newMessage.content,
-                        readAt: newMessage.readAt ?? null,
-                        createdAt: newMessage.createdAt,
-                        sender: {
-                            id: newMessage.senderId,
-                            username: newMessage.sender.username,
-                            image: newMessage.sender.image || '/callbackAvatar.webp'
-                        }   
+                            id: newMessage.id,
+                            chatId: newMessage.chatId,
+                            content: newMessage.content,
+                            readAt: newMessage.readAt ?? null,
+                            createdAt: newMessage.createdAt,
+                            sender:{
+                                    id: newMessage.senderId,
+                                    username: newMessage.sender.username,
+                                    image: newMessage.sender.image || '/callbackAvatar.webp'
+                                },
+                            reactions: []
                         }
                     ]
                 };
@@ -137,6 +109,43 @@ export default function LeftSide({ userInfos, requestsCount,messagesCount }: Lef
             socket.off("inbox:message:new",handleNewInboxMessage);
         }
     },[])
+
+    useEffect(()=>{
+        const handleNewInboxMessage = (newMessage:{
+            id:Reaction['id'],
+            readAt: Date | null,
+            messageId: Message['id'],
+            emogie: string,
+            userId: string
+        }) =>{
+            setInboxes(prev => {
+                const updatedInbox = prev.find(inbox => inbox.messages.some(message => message.id === newMessage.messageId));
+                if (!updatedInbox) return prev;
+                const updated = {
+                    ...updatedInbox,
+                    messages: updatedInbox.messages.map(message => message.id === newMessage.messageId ? {
+                        ...message,
+                        readAt: newMessage.readAt,
+                        reactions: message.reactions.map(reaction => reaction.userId === newMessage.userId ? {
+                            ...reaction,
+                            emogie: newMessage.emogie
+                        } : reaction)
+                    }  : message)
+                };
+                return [
+                    updated,
+                    ...prev.filter(inbox => inbox.id !== updatedInbox.id)
+                ];
+            })
+            
+        }
+        socket.on("inbox:reaction:new",handleNewInboxMessage);
+        return () =>{
+            socket.off("inbox:reaction:new",handleNewInboxMessage);
+        }
+    },[])
+
+
 
     useEffect(() => {
         const mq = window.matchMedia("(max-width: 1280px)");

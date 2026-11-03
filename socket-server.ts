@@ -10,7 +10,7 @@ dotenv.config({ path: ".env" });
 import { prisma } from "./src/lib/prisma";
 
 import type { newMessageValue } from "@/lib/services/message";
-import { Chat, User } from "@prisma/client";
+import { Chat, Message, Reaction, User } from "@prisma/client";
 
 //* response types*
 export type JoinChatResponse = {
@@ -137,7 +137,6 @@ io.use((socket, next) => {
 
 io.on("connection", (socket) => {
     console.log("A client connected:", socket.id);
-
     const userId = socket.data.user.id;
 
     socket.join(`user:${userId}`); //* user joins a room so he can receive events of new messages even if he is not in the chat*
@@ -269,6 +268,112 @@ io.on("connection", (socket) => {
             }
         } catch (error) {
             console.log("Failed to send message: ", error);
+        }
+    });
+
+    // here we gonna receive that reaction and verify it so we can send it to all sockets in this room and also for the receivers rooms if they are not in the chat ofc
+    socket.on("message:reaction", async (data: {
+        id: Reaction['id'],
+        userId: User['id'],
+        emogie: string,
+        messageId: Message['id']
+    }) => {
+
+        try {
+            const { messageId, emogie, id } = data;
+
+            const existingMessage = await prisma.message.findUnique({
+                where: {
+                    id: messageId
+                },
+                select: {
+                    readAt: true,
+                    chat: {
+                        select: {
+                            participants: true,
+                            id: true,
+                        },
+                    }
+                }
+            });
+
+            if (!existingMessage) {
+                throw new Error('Message does not exist!');
+            }
+
+            const isParticipant = existingMessage.chat.participants.includes(userId);
+
+            if (!isParticipant) {
+                throw new Error('Invalid request!');
+            }
+
+            const existingReaction = await prisma.reaction.findUnique({
+                where: { id },
+                select: {
+                    userId: true,
+                    messageId: true,
+                }
+            });
+
+            if (
+                !existingReaction ||
+                existingReaction.userId !== userId ||
+                existingReaction.messageId !== messageId
+            ) {
+                throw new Error('Invalid reaction!');
+            }
+
+            const chatId = existingMessage.chat.id;
+            const receiverId = existingMessage.chat.participants.find(id => id !== userId);
+
+            const roomSockets = await io.to(chatId).fetchSockets();
+            const isInChat = roomSockets.some(
+                roomSocket => roomSocket.data.user.id === receiverId
+            );
+
+            const updatedData = await prisma.reaction.update({
+                where: {
+                    id,
+                },
+                data: {
+                    emogie,
+                },
+                select: {
+                    id: true,
+                    userId: true,
+                    messageId: true,
+                    emogie: true,
+                }
+            });
+
+            let readAt = existingMessage.readAt;
+
+            if (isInChat) {
+                readAt = new Date();
+                await prisma.message.update({
+                    where: {
+                        id: messageId
+                    },
+                    data: {
+                        readAt,
+                    }
+                });
+            }
+
+            const formattedData = {
+                ...updatedData,
+                readAt
+            };
+
+            io.in(chatId).emit("reaction:new", formattedData);
+
+            if (receiverId) {
+                io.to(`user:${receiverId}`).emit("inbox:reaction:new", formattedData);
+            }
+        }
+        catch (error) {
+            console.log('Failed to send reaction: ', error);
+            
         }
     });
 

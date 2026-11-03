@@ -43,7 +43,7 @@ export default function DeleteModel({ ariaLabel, onConfirm, loading, ownerUserna
             </button>
 
             {isOpen && (
-                <div className="absolute bottom-2 right--25 z-20 mt-1 w-28 overflow-hidden rounded-lg border border-primary5 bg-primary8 p-1 shadow-xl sm:w-36 sm:rounded-xl">
+                <div className="absolute bottom-2 right-10 z-20 mt-1 w-28 overflow-hidden rounded-lg border border-primary5 bg-primary8 p-1 shadow-xl sm:w-36 sm:rounded-xl">
                     <button
                         type="button"
                         disabled={loading}
